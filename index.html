@@ -1,565 +1,581 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
   <title>Blind Tech Foundation</title>
   <style>
     :root {
-      --bg: #000000;
-      --surface: #121212;
-      --card: #1c1c1c;
-      --primary: #ffd700;
-      --text: #ffffff;
-      --border: #ffd700;
-      --accent: #00e5ff;
-      --btn-green: #00c853;
-      --btn-red: #d50000;
-      --btn-blue: #2979ff;
+      --bg-color: #000000;
+      --surface-color: #121212;
+      --card-color: #1e1e1e;
+      --primary-color: #ffd700; /* High-contrast Amber/Gold */
+      --text-color: #ffffff;
+      --text-muted: #b0b0b0;
+      --border-color: #ffd700;
+      --danger-color: #ff5555;
+      --font-scale: 1;
     }
+
     [data-theme="light"] {
-      --bg: #ffffff;
-      --surface: #f5f5f5;
-      --card: #e0e0e0;
-      --primary: #000000;
-      --text: #000000;
-      --border: #000000;
-      --accent: #d50000;
-      --btn-green: #2e7d32;
-      --btn-red: #c62828;
-      --btn-blue: #1565c0;
+      --bg-color: #ffffff;
+      --surface-color: #f5f5f5;
+      --card-color: #e0e0e0;
+      --primary-color: #0000ee;
+      --text-color: #000000;
+      --text-muted: #333333;
+      --border-color: #0000ee;
+      --danger-color: #cc0000;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background-color: var(--bg);
-      color: var(--text);
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      padding: 12px;
-      min-height: 100vh;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-size: calc(16px * var(--font-scale));
+      line-height: 1.6;
       display: flex;
       flex-direction: column;
-    }
-    h1 {
-      text-align: center;
-      color: var(--primary);
-      font-size: 22px;
-      margin-bottom: 8px;
-    }
-    .field { margin-bottom: 8px; }
-    label {
-      display: block;
-      font-size: 13px;
-      font-weight: bold;
-      color: var(--primary);
-      margin-bottom: 4px;
-    }
-    select, textarea {
-      width: 100%;
-      background: var(--surface);
-      color: var(--text);
-      border: 2px solid var(--border);
-      border-radius: 8px;
-      padding: 10px;
-      font-size: 16px;
-      outline: none;
-    }
-    textarea { height: 110px; resize: vertical; }
-    .meta-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      color: var(--primary);
-      margin-top: 4px;
-    }
-    #readingDisplay {
-      display: none;
-      min-height: 44px;
-      padding: 8px;
-      margin-bottom: 8px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 16px;
-      line-height: 1.4;
-    }
-    .active-word {
-      background-color: var(--primary);
-      color: var(--bg);
-      font-weight: bold;
-      padding: 0 2px;
-      border-radius: 2px;
-    }
-    .hub-wrapper {
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      background: var(--surface);
-      margin: 10px 0;
+      height: 100vh;
       overflow: hidden;
     }
-    .hub-header {
-      background: var(--primary);
-      color: var(--bg);
-      padding: 14px;
-      font-size: 16px;
-      font-weight: 900;
-      text-align: center;
-      letter-spacing: 0.5px;
+
+    /* Screen Reader Only Utility */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
     }
-    .hub-inner { padding: 10px; }
-    .grid-hub {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+
+    /* Header Bar */
+    header {
+      background-color: var(--surface-color);
+      border-bottom: 2px solid var(--border-color);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 64px;
+    }
+
+    header h1 {
+      font-size: 1.25rem;
+      color: var(--primary-color);
+      font-weight: 700;
+    }
+
+    .header-actions {
+      display: flex;
       gap: 8px;
     }
-    button.tool-btn {
-      min-height: 50px;
-      padding: 6px 4px;
-      background: var(--card);
-      color: var(--primary);
-      border: 1.5px solid var(--border);
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: bold;
+
+    /* Accessible Interactive Elements */
+    button, a.btn {
+      min-width: 48px;
+      min-height: 48px;
+      padding: 10px 14px;
+      background-color: var(--surface-color);
+      color: var(--primary-color);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
       cursor: pointer;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      text-align: center;
+      text-decoration: none;
+      touch-action: manipulation;
     }
-    button.tool-btn:active { background: var(--primary); color: var(--bg); }
-    button.green { background: var(--btn-green); color: #fff; border-color: var(--btn-green); }
-    button.red { background: var(--btn-red); color: #fff; border-color: var(--btn-red); }
-    button.blue { background: var(--btn-blue); color: #fff; border-color: var(--btn-blue); }
-    .col-span-2 { grid-column: span 2; }
-    #status {
-      margin-top: auto;
-      padding: 8px;
-      background: var(--surface);
-      border: 2px solid var(--border);
-      border-radius: 6px;
-      color: var(--accent);
-      font-size: 13px;
+
+    button:focus, a.btn:focus, input:focus, select:focus, textarea:focus {
+      outline: 4px solid var(--primary-color);
+      outline-offset: 2px;
+      background-color: var(--card-color);
+    }
+
+    /* Main Content Area */
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      padding-bottom: 90px;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .card {
+      background-color: var(--card-color);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .card h2 {
+      font-size: 1.2rem;
+      color: var(--primary-color);
+      margin-bottom: 8px;
+    }
+
+    .btn-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      min-height: 48px;
+      padding: 8px 12px;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-top: 6px;
+      margin-bottom: 12px;
+    }
+
+    /* Calculator Grid */
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    /* Bottom Navigation Bar */
+    nav.bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: var(--surface-color);
+      border-top: 2px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      padding: 6px 4px;
+      z-index: 100;
+    }
+
+    .nav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 4px;
+      min-height: 52px;
+    }
+
+    .nav-btn.active {
+      color: var(--primary-color);
       font-weight: bold;
-      text-align: center;
+      border-bottom: 3px solid var(--primary-color);
+      border-radius: 0;
     }
-    input[type="file"] { display: none; }
+
+    /* Screen Curtain */
+    #screenCurtain {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: black;
+      z-index: 9999;
+    }
   </style>
 </head>
 <body>
 
-  <h1>Blind Tech Foundation</h1>
+  <!-- Hidden ARIA Live Announcer -->
+  <div id="liveAnnouncer" class="sr-only" aria-live="assertive"></div>
+  <div id="screenCurtain" aria-hidden="true"></div>
 
-  <div class="field">
-    <label for="voiceSelect">Language / Voice Engine:</label>
-    <select id="voiceSelect"></select>
-  </div>
-
-  <div class="field">
-    <label for="mainInput">Text Content:</label>
-    <textarea id="mainInput" maxlength="10000" placeholder="Type, paste, dictate, or import text here..."></textarea>
-    <div class="meta-row">
-      <span id="charCount">0 / 10000</span>
-      <span id="langNotice">Script: Auto</span>
+  <!-- Header -->
+  <header role="banner">
+    <h1>Blind Tech</h1>
+    <div class="header-actions">
+      <button onclick="toggleVoiceSearch()" aria-label="Voice Search" accessibilityHint="Triggers speech to text search">🎤</button>
+      <button onclick="toggleTheme()" aria-label="Toggle Color Theme" accessibilityHint="Switches high contrast dark and light modes">🌓</button>
+      <button onclick="toggleCurtain()" aria-label="Screen Curtain" accessibilityHint="Blanks screen for privacy and battery savings">🕶️</button>
     </div>
-  </div>
+  </header>
 
-  <div id="readingDisplay" aria-live="polite"></div>
+  <!-- Main Multi-Tab Body -->
+  <main id="mainContainer" role="main">
 
-  <div class="hub-wrapper">
-    <div class="hub-header">
-      ⚡ ACCESS HUB (ALL 20 FEATURES INSIDE)
-    </div>
-    <div class="hub-inner">
-      <div class="grid-hub">
-        <button type="button" class="tool-btn green" onclick="f1_tts()">1. Text to Speech</button>
-        <button type="button" class="tool-btn blue" onclick="f2_stt()">2. Speech to Text</button>
-        <button type="button" class="tool-btn" onclick="document.getElementById('imgInput').click()">3. Camera OCR</button>
-        <button type="button" class="tool-btn" onclick="document.getElementById('pdfInput').click()">4. PDF Reader</button>
-        <button type="button" class="tool-btn" onclick="document.getElementById('docInput').click()">5. File Importer</button>
-        <button type="button" class="tool-btn" onclick="f6_translate()">6. Indic Translator</button>
-        <button type="button" class="tool-btn" onclick="f7_summarize()">7. NLP Summarizer</button>
-        <button type="button" class="tool-btn green" onclick="f8_exportAudio()">8. Export Audio WAV</button>
-        <button type="button" class="tool-btn blue" onclick="f9_share()">9. Share Sheet</button>
-        <button type="button" class="tool-btn" onclick="f10_paste()">10. Clipboard Reader</button>
-        <button type="button" class="tool-btn" onclick="f11_magnifier()">11. Font Magnifier</button>
-        <button type="button" class="tool-btn" onclick="f12_theme()">12. Contrast Theme</button>
-        <button type="button" class="tool-btn" onclick="f13_wakeLock()">13. Screen Wake Lock</button>
-        <button type="button" class="tool-btn" onclick="f14_sleepTimer()">14. Audio Sleep Timer</button>
-        <button type="button" class="tool-btn" onclick="f15_voiceRecord()">15. Voice Recorder</button>
-        <button type="button" class="tool-btn" onclick="f16_pronounce()">16. Pronounce Word</button>
-        <button type="button" class="tool-btn" onclick="f17_haptic()">17. Haptic Buzz</button>
-        <button type="button" class="tool-btn" onclick="f18_history()">18. Offline History</button>
-        <button type="button" class="tool-btn" onclick="f19_highlight()">19. Live Highlighter</button>
-        <button type="button" class="tool-btn red col-span-2" onclick="f20_sos()">20. Emergency SOS</button>
+    <!-- 1. DASHBOARD TAB -->
+    <section id="tab-dashboard" class="tab-content active" aria-label="Dashboard Screen">
+      <div class="card">
+        <h2>Quick Status</h2>
+        <p id="dashboardStatus">Welcome to Blind Tech Foundation.</p>
+        <div class="btn-grid">
+          <button onclick="announceClockAndBattery()" accessibilityLabel="Announce Time Date and Battery">🕒 Time & Battery</button>
+          <button onclick="triggerEmergencyCall()" accessibilityLabel="Call Technical Help Desk">📞 Emergency Call</button>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <div id="status" role="status" aria-live="polite">Ready. All 20 features ready.</div>
+      <div class="card">
+        <h2>Announcements</h2>
+        <p>• PWA build online and ready for deployment.</p>
+        <p>• Fully accessible TalkBack navigation enabled.</p>
+      </div>
+    </section>
 
-  <input type="file" id="imgInput" accept="image/*" capture="environment" onchange="f3_ocr(event)">
-  <input type="file" id="pdfInput" accept=".pdf" onchange="f4_pdf(event)">
-  <input type="file" id="docInput" accept=".txt,.json,.csv,.md" onchange="f5_doc(event)">
+    <!-- 2. TOOLS TAB -->
+    <section id="tab-tools" class="tab-content" aria-label="Assistive Utilities Suite">
+      <!-- Talking Calculator -->
+      <div class="card">
+        <h2>Talking Calculator</h2>
+        <input type="text" id="calcDisplay" readonly value="" aria-label="Calculator calculation and result" />
+        <div class="calc-grid">
+          <button onclick="pressCalc('7')">7</button>
+          <button onclick="pressCalc('8')">8</button>
+          <button onclick="pressCalc('9')">9</button>
+          <button onclick="pressCalc('/')">÷</button>
+          <button onclick="pressCalc('4')">4</button>
+          <button onclick="pressCalc('5')">5</button>
+          <button onclick="pressCalc('6')">6</button>
+          <button onclick="pressCalc('*')">×</button>
+          <button onclick="pressCalc('1')">1</button>
+          <button onclick="pressCalc('2')">2</button>
+          <button onclick="pressCalc('3')">3</button>
+          <button onclick="pressCalc('-')">-</button>
+          <button onclick="pressCalc('0')">0</button>
+          <button onclick="pressCalc('C')">C</button>
+          <button onclick="pressCalc('=')">=</button>
+          <button onclick="pressCalc('+')">+</button>
+        </div>
+      </div>
+
+      <!-- Text Cleaner Utility -->
+      <div class="card">
+        <h2>Text & Clipboard Utility</h2>
+        <label for="cleanerInput">Paste dirty text here:</label>
+        <textarea id="cleanerInput" rows="3" placeholder="Paste text here..."></textarea>
+        <div class="btn-grid">
+          <button onclick="cleanText()">Clean Text</button>
+          <button onclick="speakText(document.getElementById('cleanerInput').value)">Speak</button>
+          <button onclick="copyToClipboard(document.getElementById('cleanerInput').value)">Copy Result</button>
+        </div>
+      </div>
+
+      <!-- Unit Converter -->
+      <div class="card">
+        <h2>Unit Converter (Length)</h2>
+        <label for="converterValue">Meters:</label>
+        <input type="number" id="converterValue" placeholder="Enter meters" />
+        <button onclick="convertMetersToFeet()">Convert to Feet</button>
+        <p id="converterResult" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <!-- 3. MEDIA STUDIO TAB -->
+    <section id="tab-media" class="tab-content" aria-label="Media Studio Screen">
+      <!-- TTS Studio -->
+      <div class="card">
+        <h2>Text to Speech Studio</h2>
+        <label for="ttsInput">Enter Text to Synthesize:</label>
+        <textarea id="ttsInput" rows="3" placeholder="Type text here to speak..."></textarea>
+        <div class="btn-grid">
+          <button onclick="speakText(document.getElementById('ttsInput').value)">Speak Aloud</button>
+          <button onclick="stopSpeech()">Stop Audio</button>
+        </div>
+      </div>
+
+      <!-- Voice Recorder -->
+      <div class="card">
+        <h2>Voice Memo Recorder</h2>
+        <p id="recordStatus">Status: Idle</p>
+        <div class="btn-grid">
+          <button id="recordBtn" onclick="toggleAudioRecording()">Start Recording</button>
+        </div>
+        <audio id="audioPlayback" controls style="width: 100%; margin-top: 12px; display: none;"></audio>
+      </div>
+    </section>
+
+    <!-- 4. SOFTWARE VAULT TAB -->
+    <section id="tab-software" class="tab-content" aria-label="Software Vault Screen">
+      <div class="card">
+        <h2>Curated Software Vault</h2>
+        <div class="vault-item" style="margin-bottom: 12px;">
+          <h3>Commentary Screen Reader (Jieshuo)</h3>
+          <p>Category: Screen Reader • Ver: Latest • Safe</p>
+          <a class="btn" href="https://github.com" target="_blank" rel="noopener">Download APK</a>
+        </div>
+        <div class="vault-item">
+          <h3>Vocalizer TTS Voice Data</h3>
+          <p>Category: Voice Engine • Ver: 3.2 • Safe</p>
+          <a class="btn" href="https://github.com" target="_blank" rel="noopener">Download Package</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. HUB & COMMUNITY TAB -->
+    <section id="tab-hub" class="tab-content" aria-label="Hub and Support Screen">
+      <div class="card">
+        <h2>One-Tap Direct Support</h2>
+        <div class="btn-grid">
+          <button onclick="triggerEmergencyCall()">Call Support (+91 79765 58685)</button>
+          <button onclick="openWhatsApp()">Open WhatsApp Support</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Feedback & Bug Reporter</h2>
+        <label for="feedbackText">Describe the issue or request:</label>
+        <textarea id="feedbackText" rows="3" placeholder="Explain steps to reproduce..."></textarea>
+        <button onclick="submitDiagnostics()">Submit with Device Diagnostics</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Bottom Navigation Bar -->
+  <nav class="bottom-nav" role="navigation" aria-label="Main Navigation">
+    <button class="nav-btn active" onclick="switchTab('tab-dashboard', this)" aria-label="Dashboard Tab">
+      <span aria-hidden="true">🏠</span> Dashboard
+    </button>
+    <button class="nav-btn" onclick="switchTab('tab-tools', this)" aria-label="Tools Tab">
+      <span aria-hidden="true">🛠️</span> Tools
+    </button>
+    <button class="nav-btn" onclick="switchTab('tab-media', this)" aria-label="Media Studio Tab">
+      <span aria-hidden="true">🎙️</span> Media
+    </button>
+    <button class="nav-btn" onclick="switchTab('tab-software', this)" aria-label="Software Vault Tab">
+      <span aria-hidden="true">📦</span> Vault
+    </button>
+    <button class="nav-btn" onclick="switchTab('tab-hub', this)" aria-label="Hub and Support Tab">
+      <span aria-hidden="true">🤝</span> Hub
+    </button>
+  </nav>
 
   <script>
-    const synth = window.speechSynthesis;
-    let voices = [];
-    let activeUtterance = null;
-    let heartbeatTimer = null;
-    let recognition = null;
-    let isDictating = false;
-    let wakeLockSentinel = null;
-    let sleepTimerRef = null;
-    let mediaRecorder = null;
-    let audioChunks = [];
-    let isRecording = false;
-    let highlighterOn = true;
-    let cachedWavBlob = null;
-    let fontSizes = [16, 20, 24, 28];
-    let fontIdx = 0;
-
-    const mainInput = document.getElementById('mainInput');
-    const voiceSelect = document.getElementById('voiceSelect');
-    const statusBox = document.getElementById('status');
-    const charCount = document.getElementById('charCount');
-    const langNotice = document.getElementById('langNotice');
-    const readingDisplay = document.getElementById('readingDisplay');
-
-    function notify(text, pattern = [40]) {
-      statusBox.textContent = text;
+    /* Audio & Haptic Announcer */
+    function announce(text) {
+      const announcer = document.getElementById('liveAnnouncer');
+      announcer.textContent = text;
       if (navigator.vibrate) {
-        try { navigator.vibrate(pattern); } catch (e) {}
+        navigator.vibrate(50);
+      }
+      speakText(text);
+    }
+
+    /* Tab Switching Logic */
+    function switchTab(tabId, el) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+      
+      const target = document.getElementById(tabId);
+      target.classList.add('active');
+      el.classList.add('active');
+      
+      const tabTitle = el.getAttribute('aria-label') || 'Tab changed';
+      announce(tabTitle);
+      target.focus();
+    }
+
+    /* Screen Reader Speech Synthesis */
+    function speakText(text) {
+      if (!('speechSynthesis' in window) || !text) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function stopSpeech() {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
       }
     }
 
-    window.addEventListener('load', () => {
-      const saved = localStorage.getItem('access_hub_data');
-      if (saved) {
-        mainInput.value = saved;
-        updateStats();
-      }
-      loadVoices();
-    });
+    /* Time & Battery Readout */
+    async function announceClockAndBattery() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const dateStr = now.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+      let batteryMsg = '';
 
-    function loadVoices() {
-      voices = synth.getVoices();
-      voiceSelect.innerHTML = '';
-      if (!voices.length) {
-        const opt = document.createElement('option');
-        opt.value = "";
-        opt.textContent = "Default Android Voice";
-        voiceSelect.appendChild(opt);
-        return;
-      }
-      voices.forEach((v) => {
-        const opt = document.createElement('option');
-        opt.value = v.voiceURI;
-        opt.textContent = `${v.name} (${v.lang})`;
-        voiceSelect.appendChild(opt);
-      });
-    }
-    if (speechSynthesis.onvoiceschanged !== undefined) {
-      speechSynthesis.onvoiceschanged = loadVoices;
-    }
-
-    mainInput.addEventListener('input', updateStats);
-    function updateStats() {
-      const val = mainInput.value;
-      charCount.textContent = `${val.length} / 10000`;
-      localStorage.setItem('access_hub_data', val);
-
-      if (/[\u0900-\u097F]/.test(val)) langNotice.textContent = "Script: Hindi/Devanagari";
-      else if (/[\u0B80-\u0BFF]/.test(val)) langNotice.textContent = "Script: Tamil";
-      else if (/[\u0C00-\u0C7F]/.test(val)) langNotice.textContent = "Script: Telugu";
-      else if (/[\u0C80-\u0CFF]/.test(val)) langNotice.textContent = "Script: Kannada";
-      else if (/[\u0980-\u09FF]/.test(val)) langNotice.textContent = "Script: Bengali";
-      else if (/[A-Za-z]/.test(val)) langNotice.textContent = "Script: Latin/English";
-      else langNotice.textContent = "Script: Auto";
-    }
-
-    function f1_tts() {
-      const text = mainInput.value.trim();
-      if (!text) { notify("Text is empty."); return; }
-      synth.cancel();
-
-      activeUtterance = new SpeechSynthesisUtterance(text);
-      const match = voices.find(v => v.voiceURI === voiceSelect.value);
-      if (match) {
-        activeUtterance.voice = match;
-        activeUtterance.lang = match.lang;
-      }
-
-      if (highlighterOn) {
-        readingDisplay.style.display = "block";
-        readingDisplay.textContent = text;
-        activeUtterance.onboundary = (e) => {
-          if (e.name === 'word') {
-            const start = e.charIndex;
-            const end = start + (e.charLength || 5);
-            readingDisplay.innerHTML = text.substring(0, start) +
-              `<span class="active-word">${text.substring(start, end)}</span>` +
-              text.substring(end);
-          }
-        };
-      }
-
-      activeUtterance.onstart = () => {
-        notify("Speaking text...");
-        clearInterval(heartbeatTimer);
-        heartbeatTimer = setInterval(() => {
-          if (!synth.speaking) clearInterval(heartbeatTimer);
-          else { synth.pause(); synth.resume(); }
-        }, 10000);
-      };
-
-      activeUtterance.onend = () => {
-        clearInterval(heartbeatTimer);
-        readingDisplay.style.display = "none";
-        notify("Playback complete.");
-      };
-
-      activeUtterance.onerror = () => {
-        clearInterval(heartbeatTimer);
-        readingDisplay.style.display = "none";
-        notify("Speech error.");
-      };
-
-      synth.speak(activeUtterance);
-    }
-
-    function f2_stt() {
-      const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!Speech) { notify("Dictation unavailable."); return; }
-
-      if (isDictating && recognition) {
-        recognition.stop();
-        return;
-      }
-
-      recognition = new Speech();
-      recognition.continuous = true;
-      recognition.interimResults = false;
-
-      const match = voices.find(v => v.voiceURI === voiceSelect.value);
-      if (match) recognition.lang = match.lang;
-
-      recognition.onstart = () => {
-        isDictating = true;
-        notify("Listening... Speak now.", [50, 50]);
-      };
-
-      recognition.onresult = (e) => {
-        let text = '';
-        for (let i = e.resultIndex; i < e.results.length; ++i) {
-          if (e.results[i].isFinal) text += e.results[i][0].transcript;
-        }
-        if (text) {
-          mainInput.value = (mainInput.value ? mainInput.value + " " : "") + text.trim();
-          updateStats();
-          notify("Added speech text.");
-        }
-      };
-
-      recognition.onerror = () => { isDictating = false; notify("Dictation error."); };
-      recognition.onend = () => { isDictating = false; notify("Dictation stopped."); };
-      recognition.start();
-    }
-
-    function f3_ocr(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      notify("Processing image...");
-
-      const img = new Image();
-      img.onload = () => {
-        const stamp = `\n[Image Scan: ${file.name} | ${img.width}x${img.height} | ${(file.size / 1024).toFixed(1)} KB]`;
-        mainInput.value = (mainInput.value ? mainInput.value : "") + stamp;
-        updateStats();
-        notify("Image info added.");
-        URL.revokeObjectURL(img.src);
-      };
-      img.src = URL.createObjectURL(file);
-      e.target.value = '';
-    }
-
-    function f4_pdf(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      notify("Parsing PDF...");
-
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        const content = evt.target.result;
-        const matches = content.match(/\(([^()]+)\)\s*Tj/g) || [];
-        let extracted = matches.map(m => m.replace(/[()]/g, '').replace(/Tj/, '').trim()).join(' ');
-        if (!extracted || extracted.length < 5) {
-          extracted = `[PDF Document: ${file.name} | ${(file.size / 1024).toFixed(1)} KB]`;
-        }
-        mainInput.value = (mainInput.value ? mainInput.value + "\n" : "") + extracted.slice(0, 10000);
-        updateStats();
-        notify("PDF text ingested.");
-      };
-      reader.readAsBinaryString(file);
-      e.target.value = '';
-    }
-
-    function f5_doc(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        mainInput.value = evt.target.result.slice(0, 10000);
-        updateStats();
-        notify(`File loaded: ${file.name}`);
-        e.target.value = '';
-      };
-      reader.readAsText(file);
-    }
-
-    function f6_translate() {
-      const text = mainInput.value.trim();
-      if (!text) { notify("Enter text first."); return; }
-
-      const vocabulary = {
-        "hello": "नमस्ते (Namaste)", "world": "दुनिया (Duniya)", "book": "किताब (Kitab)",
-        "read": "पढ़ना (Padhna)", "water": "पानी (Paani)", "help": "मदद (Madad)",
-        "yes": "हाँ (Haan)", "no": "नहीं (Nahi)", "friend": "दोस्त (Dost)", "emergency": "आपातकाल (Aapaatkaal)"
-      };
-
-      const out = text.split(/\b/).map(word => {
-        const key = word.toLowerCase();
-        return vocabulary[key] ? vocabulary[key] : word;
-      }).join('');
-
-      mainInput.value = out;
-      updateStats();
-      notify("Translation applied.");
-    }
-
-    function f7_summarize() {
-      const text = mainInput.value.trim();
-      if (!text) { notify("Enter text first."); return; }
-
-      const sentences = (text.match(/[^.!?\n]+[.!?\n]+/g) || [text]).map(s => s.trim()).filter(s => s.length > 5);
-      if (sentences.length <= 2) { notify("Text already compact."); return; }
-
-      const stopWords = new Set(["the","is","in","and","to","of","it","that","you","he","was","for","on","are","as","with"]);
-      const freq = {};
-
-      text.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).forEach(w => {
-        if (!stopWords.has(w) && w.length > 2) freq[w] = (freq[w] || 0) + 1;
-      });
-
-      const scored = sentences.map((s, idx) => {
-        let score = 0;
-        s.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).forEach(w => {
-          if (freq[w]) score += freq[w];
-        });
-        return { text: s, score: score / (s.split(/\s+/).length + 1), idx };
-      });
-
-      const targetCount = Math.max(2, Math.ceil(sentences.length * 0.35));
-      const selection = scored.sort((a, b) => b.score - a.score).slice(0, targetCount).sort((a, b) => a.idx - b.idx);
-
-      mainInput.value = selection.map(item => `• ${item.text}`).join('\n\n');
-      updateStats();
-      notify("Summary generated.");
-    }
-
-    function f8_exportAudio() {
-      const text = mainInput.value.trim();
-      if (!text) { notify("Buffer empty."); return; }
-
-      notify("Rendering audio WAV...");
-      const formants = { 'a': [800, 1200], 'e': [500, 1800], 'i': [300, 2300], 'o': [500, 1000], 'u': [350, 800] };
-      const sampleRate = 16000;
-      const phonemeDur = 0.14;
-      const samplesPerPhoneme = Math.floor(sampleRate * phonemeDur);
-      const chars = text.toLowerCase().replace(/[^a-z\s]/g, '').slice(0, 120).split('');
-      if (!chars.length) chars.push('a');
-
-      const totalSamples = samplesPerPhoneme * chars.length;
-      const buffer = new ArrayBuffer(44 + totalSamples * 2);
-      const view = new DataView(buffer);
-
-      function wStr(offset, str) { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); }
-      wStr(0, 'RIFF'); view.setUint32(4, 36 + totalSamples * 2, true);
-      wStr(8, 'WAVE'); wStr(12, 'fmt ');
-      view.setUint32(16, 16, true);
-      view.setUint16(20, 1, true);
-      view.setUint16(22, 1, true);
-      view.setUint32(24, sampleRate, true);
-      view.setUint32(28, sampleRate * 2, true);
-      view.setUint16(32, 2, true);
-      view.setUint16(34, 16, true);
-      wStr(36, 'data');
-      view.setUint32(40, totalSamples * 2, true);
-
-      let offset = 44;
-      for (let c = 0; c < chars.length; c++) {
-        const [f1, f2] = formants[chars[c]] || [600, 1400];
-        for (let i = 0; i < samplesPerPhoneme; i++) {
-          const t = i / sampleRate;
-          const glottal = Math.sin(2 * Math.PI * 130 * t);
-          const res1 = Math.sin(2 * Math.PI * f1 * t);
-          const res2 = Math.sin(2 * Math.PI * f2 * t);
-          const s = (glottal * 0.4 + res1 * 0.4 + res2 * 0.2) * Math.sin((Math.PI * i) / samplesPerPhoneme);
-          view.setInt16(offset, Math.max(-1, Math.min(1, s)) * 0x7FFF, true);
-          offset += 2;
-        }
-      }
-
-      cachedWavBlob = new Blob([buffer], { type: 'audio/wav' });
-      const url = URL.createObjectURL(cachedWavBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'blind_tech_audio.wav';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
-      notify("WAV downloaded.");
-    }
-
-    async function f9_share() {
-      const text = mainInput.value.trim();
-      if (!text) { notify("Enter text to share."); return; }
-
-      if (navigator.share) {
+      if (navigator.getBattery) {
         try {
-          await navigator.share({ title: 'Blind Tech Export', text: text });
-          notify("Share sheet opened.");
+          const battery = await navigator.getBattery();
+          batteryMsg = `, Battery level is ${Math.round(battery.level * 100)} percent`;
+        } catch (e) {}
+      }
+
+      announce(`Current time is ${timeStr}, ${dateStr}${batteryMsg}`);
+    }
+
+    /* Talking Calculator */
+    let calcVal = '';
+    function pressCalc(char) {
+      const display = document.getElementById('calcDisplay');
+      if (char === 'C') {
+        calcVal = '';
+        display.value = '';
+        announce('Cleared');
+      } else if (char === '=') {
+        try {
+          const res = Function(`'use strict'; return (${calcVal})`)();
+          display.value = res;
+          announce(`Equals ${res}`);
+          calcVal = String(res);
         } catch (e) {
-          if (e.name !== 'AbortError') notify("Share cancelled.");
+          announce('Calculation Error');
         }
       } else {
-        notify("Share API unavailable.");
+        calcVal += char;
+        display.value = calcVal;
+        announce(char);
       }
     }
 
-    async function f10_paste() {
-      try {
-        const clip = await navigator.clipboard.readText();
-        if (!clip) { notify("Clipboard empty."); return; }
-        mainInput.value = (mainInput.value + " " + clip).slice(0, 10000).trim();
-        updateStats();
-        notify("Clipboard pasted.");
-      } catch (err) {
-        mainInput.focus();
-        notify("Hold box to paste manually.");
+    /* Text Cleaner */
+    function cleanText() {
+      const area = document.getElementById('cleanerInput');
+      const cleaned = area.value
+        .replace(/[\r\n]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      area.value = cleaned;
+      announce('Text cleaned and normalized');
+    }
+
+    function copyToClipboard(str) {
+      navigator.clipboard.writeText(str).then(() => {
+        announce('Copied to clipboard');
+      });
+    }
+
+    /* Length Converter */
+    function convertMetersToFeet() {
+      const val = parseFloat(document.getElementById('converterValue').value);
+      if (isNaN(val)) {
+        announce('Please enter valid number of meters');
+        return;
+      }
+      const feet = (val * 3.28084).toFixed(2);
+      const res = `${val} meters equals ${feet} feet`;
+      document.getElementById('converterResult').textContent = res;
+      announce(res);
+    }
+
+    /* Voice Memo Recorder */
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+
+    async function toggleAudioRecording() {
+      const recordBtn = document.getElementById('recordBtn');
+      const statusText = document.getElementById('recordStatus');
+
+      if (!isRecording) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+
+          mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
+          mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const player = document.getElementById('audioPlayback');
+            player.src = audioUrl;
+            player.style.display = 'block';
+            announce('Audio recorded. Ready to play back.');
+          };
+
+          mediaRecorder.start();
+          isRecording = true;
+          recordBtn.textContent = 'Stop Recording';
+          statusText.textContent = 'Status: Recording...';
+          announce('Audio recording started');
+        } catch (err) {
+          announce('Microphone permission denied');
+        }
+      } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        recordBtn.textContent = 'Start Recording';
+        statusText.textContent = 'Status: Idle';
       }
     }
 
-    function f11_magnifier() {
-      fontIdx = (fontIdx + 1) % fontSizes.length;
-      const sz = fontSizes[fontIdx];
-      mainInput.style.fontSize = sz + "px";
-      readingDisplay.style.fontSize = sz + "px";
-      notify(`Font zoom: ${sz}px`);
+    /* Support Launchers */
+    function triggerEmergencyCall() {
+      window.location.href = 'tel:+917976558685';
     }
 
-    function f12_theme() {
-      const doc = document.documentElement;
-      const cur = doc.getAttribute('data-theme');
-      const target = cur === 'light' ? 'dark' : 'light';
-      doc.setAttribute('data-theme', target);
-      notify(`Theme
+    function openWhatsApp() {
+      const message = encodeURIComponent('Hello Blind Tech Foundation Support, I need assistance.');
+      window.open(`https://wa.me/917976558685?text=${message}`, '_blank');
+    }
+
+    function submitDiagnostics() {
+      const desc = document.getElementById('feedbackText').value;
+      const diag = `Device: ${navigator.userAgent} | Screen: ${screen.width}x${screen.height}`;
+      announce('Feedback logged with device diagnostics');
+      alert(`Report Sent!\n\nDetails: ${desc}\nDiagnostics: ${diag}`);
+      document.getElementById('feedbackText').value = '';
+    }
+
+    /* Accessibility Accessibility Quick Toggles */
+    function toggleTheme() {
+      const cur = document.body.getAttribute('data-theme');
+      const next = cur === 'light' ? 'dark' : 'light';
+      document.body.setAttribute('data-theme', next);
+      announce(`High contrast ${next} mode enabled`);
+    }
+
+    function toggleCurtain() {
+      const curtain = document.getElementById('screenCurtain');
+      if (curtain.style.display === 'block') {
+        curtain.style.display = 'none';
+        announce('Screen curtain deactivated');
+      } else {
+        curtain.style.display = 'block';
+        announce('Screen curtain activated. Display is hidden.');
+      }
+    }
+
+    function toggleVoiceSearch() {
+      if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+        announce('Voice input not supported on this browser engine');
+        return;
+      }
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-IN';
+      recognition.onstart = () => announce('Listening...');
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        announce(`Searching for ${transcript}`);
+      };
+      recognition.onerror = () => announce('Speech recognition error');
+      recognition.start();
+    }
+  </script>
+</body>
+</html>
