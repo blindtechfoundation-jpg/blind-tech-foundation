@@ -1,881 +1,3 @@
-// =================================================================================================
-// File 1: app/build.gradle.kts
-// =================================================================================================
-plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-}
-android {
-    namespace = "org.blindtechfoundation.app"
-    compileSdk = 35
-    defaultConfig {
-        applicationId = "org.blindtechfoundation.app"
-        minSdk = 26
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables { useSupportLibrary = true }
-    }
-    buildFeatures {
-        compose = true
-    }
-    composeOptions {
-// =================================================================================================
-// File 1: app/build.gradle.kts
-// =================================================================================================
-plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-}
-android {
-    namespace = "org.blindtechfoundation.app"
-    compileSdk = 35
-    defaultConfig {
-        applicationId = "org.blindtechfoundation.app"
-        minSdk = 26
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables { useSupportLibrary = true }
-    }
-    buildFeatures {
-                val isNewer = re// =================================================================================================
-// File 7: app/src/main/java/org/blindtechfoundation/app/ui/navigation/NavigationItems.kt
-// =================================================================================================
-package org.blindtechfoundation.app.ui.navigation
-
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBalance
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.FolderSpecial
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.School
-import androidx.compose.ui.graphics.vector.ImageVector
-
-sealed class Screen(val route: String, val title: String, val icon: ImageVector? = null) {
-    object Home : Screen("home", "Home", Icons.Default.Home)
-    object AIHub : Screen("ai_hub", "AI & Tools", Icons.Default.Build)
-    object Finance : Screen("finance", "Finance", Icons.Default.AccountBalance)
-    object Education : Screen("education", "Education", Icons.Default.School)
-    object VaultCommunity : Screen("vault_community", "Vault", Icons.Default.FolderSpecial)
-
-    object OCR : Screen("ocr", "Advanced OCR")
-    object Reading : Screen("reading", "Reading Hub")
-    object IDE : Screen("ide", "Accessible IDE")
-    object Banking : Screen("banking", "Banking Assistant")
-    object Study : Screen("study", "Study Tools")
-    object NavigationAssist : Screen("navigation_assist", "Navigation Assistant")
-    object Health : Screen("health", "Health & Wellness")
-    object DailyTasks : Screen("daily_tasks", "Daily Tasks")
-    object Agriculture : Screen("agriculture", "Agriculture Assistant")
-    object Legal : Screen("legal", "Legal & Schemes")
-    object MediaTools : Screen("media_tools", "Media Tools")
-    object Articles : Screen("articles", "Articles Hub")
-    object News : Screen("news", "News Hub")
-    object SoftwareVault : Screen("software_vault", "Software Vault")
-    object Community : Screen("community", "Community & Support")
-}
-
-val BottomNavItems = listOf(
-    Screen.Home,
-    Screen.AIHub,
-    Screen.Finance,
-    Screen.Education,
-    Screen.VaultCommunity
-)
-// =================================================================================================
-// File 8: app/src/main/java/org/blindtechfoundation/app/ui/components/AccessibleComponents.kt
-// =================================================================================================
-package org.blindtechfoundation.app.ui.components
-
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import org.blindtechfoundation.app.accessibility.AccessibilityUtils
-
-@Composable
-fun AccessibleButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    contentDescription: String = text,
-    isPrimary: Boolean = true
-) {
-    val context = LocalContext.current
-    val minSizeModifier = modifier.defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
-
-    if (isPrimary) {
-        Button(
-            onClick = {
-                AccessibilityUtils.triggerHapticFeedback(context)
-                onClick()
-            },
-            modifier = minSizeModifier.semantics {
-                this.contentDescription = contentDescription
-                this.role = Role.Button
-            },
-            shape = RoundedCornerShape(8.dp),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp)
-        ) {
-            Text(text = text, fontSize = 16.sp)
-        }
-    } else {
-        OutlinedButton(
-            onClick = {
-                AccessibilityUtils.triggerHapticFeedback(context)
-                onClick()
-            },
-            modifier = minSizeModifier.semantics {
-                this.contentDescription = contentDescription
-                this.role = Role.Button
-            },
-            border = BorderStroke(2.dp, MaterialTheme.colorScheme.outline),
-            shape = RoundedCornerShape(8.dp),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp)
-        ) {
-            Text(text = text, fontSize = 16.sp)
-        }
-    }
-}
-
-@Composable
-fun AccessibleActionCard(
-    title: String,
-    subtitle: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val context = LocalContext.current
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .defaultMinSize(minHeight = 72.dp)
-            .semantics(mergeDescendants = true) {
-                this.contentDescription = "$title. $subtitle. Double tap to activate."
-                this.role = Role.Button
-            }
-            .clickable {
-                AccessibilityUtils.triggerHapticFeedback(context)
-                onClick()
-            },
-        border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outline),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                modifier = Modifier.padding(top = 4.dp)
-            )
-        }
-    }
-}
-
-@Composable
-fun AccessibleTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    modifier: Modifier = Modifier,
-    placeholder: String = "",
-    accessibilityDescription: String = label
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label) },
-        placeholder = { if (placeholder.isNotEmpty()) Text(placeholder) },
-        modifier = modifier
-            .fillMaxWidth()
-            .defaultMinSize(minHeight = 56.dp)
-            .semantics {
-                contentDescription = accessibilityDescription
-            }
-    )
-}
-// =================================================================================================
-// File 9: app/src/main/java/org/blindtechfoundation/app/ui/screens/Screens.kt
-// =================================================================================================
-package org.blindtechfoundation.app.ui.screens
-
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import org.blindtechfoundation.app.accessibility.SpeechManager
-import org.blindtechfoundation.app.ui.components.AccessibleActionCard
-import org.blindtechfoundation.app.ui.components.AccessibleButton
-import org.blindtechfoundation.app.ui.components.AccessibleTextField
-import org.blindtechfoundation.app.ui.navigation.Screen
-import java.util.Locale
-import kotlin.math.pow
-
-@Composable
-fun HomeScreen(navController: NavController, speechManager: SpeechManager) {
-    val context = LocalContext.current
-    val scrollState = rememberScrollState()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .border(2.dp, MaterialTheme.colorScheme.outline)
-                .padding(16.dp)
-                .semantics(mergeDescendants = true) {
-                    contentDescription = "Foundation Announcement. Welcome to Blind Tech Foundation Accessible Portal."
-                }
-        ) {
-            Column {
-                Text(
-                    text = "Foundation Announcements",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.semantics { heading() }
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "Welcome to Blind Tech Foundation Mobile Suite. TalkBack accessibility, High-Contrast AAA mode, and Bluetooth hardware shortcuts active.",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        }
-
-        Text(
-            text = "Quick Tools Access",
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.semantics { heading() }
-        )
-
-        AccessibleActionCard(
-            title = "OCR & Scene Reader",
-            subtitle = "Extract text from images, camera snapshots, or listen to AI scene descriptions.",
-            onClick = { navController.navigate(Screen.OCR.route) }
-        )
-
-        AccessibleActionCard(
-            title = "Universal Reading Hub",
-            subtitle = "Native document reader for PDF, TXT, and Markdown with audio playback controls.",
-            onClick = { navController.navigate(Screen.Reading.route) }
-        )
-
-        AccessibleActionCard(
-            title = "Banking Transaction Assistant",
-            subtitle = "Step-by-step form helper with digit confirmation and INR amount-to-word conversion.",
-            onClick = { navController.navigate(Screen.Banking.route) }
-        )
-
-        AccessibleActionCard(
-            title = "Accessible Code IDE",
-            subtitle = "Accessible programming environment for Python, HTML, JS, and C++ with spoken terminal.",
-            onClick = { navController.navigate(Screen.IDE.route) }
-        )
-
-        AccessibleActionCard(
-            title = "Emergency SOS",
-            subtitle = "Trigger immediate emergency call to verified contacts or ambulance services.",
-            onClick = {
-                val callIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:112"))
-                context.startActivity(callIntent)
-            }
-        )
-    }
-}
-
-@Composable
-fun OCRScreen(speechManager: SpeechManager) {
-    var recognizedText by remember {
-        mutableStateOf("Blind Tech Foundation\nEmpowering individuals with accessible, open-source technology.")
-    }
-    val context = LocalContext.current
-    val scrollState = rememberScrollState()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("Advanced OCR & Scene Hub", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            AccessibleButton(
-                text = "Capture Image",
-                onClick = { speechManager.speak("Camera capture initiated.") },
-                modifier = Modifier.weight(1f)
-            )
-            AccessibleButton(
-                text = "Import Document",
-                onClick = { speechManager.speak("Device storage picker opened.") },
-                modifier = Modifier.weight(1f),
-                isPrimary = false
-            )
-        }
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            AccessibleButton(
-                text = "Process OCR (Alt+P)",
-                onClick = {
-                    speechManager.speak("OCR process completed. Displaying recognized text.")
-                },
-                modifier = Modifier.weight(1f)
-            )
-            AccessibleButton(
-                text = "Describe Scene",
-                onClick = {
-                    speechManager.speak("Scene Analysis: An open workspace with a computer displaying code and assistive navigation tools.")
-                },
-                modifier = Modifier.weight(1f),
-                isPrimary = false
-            )
-        }
-
-        Text("Extracted Text Content:", style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
-        AccessibleTextField(
-            value = recognizedText,
-            onValueChange = { recognizedText = it },
-            label = "Editable Extracted Text",
-            accessibilityDescription = "Extracted text content area"
-        )
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            AccessibleButton(
-                text = "Read Aloud",
-                onClick = { speechManager.speak(recognizedText) },
-                modifier = Modifier.weight(1f)
-            )
-            AccessibleButton(
-                text = "Copy Text",
-                onClick = {
-                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    clipboard.setPrimaryClip(ClipData.newPlainText("Extracted Text", recognizedText))
-                    speechManager.speak("Text copied to clipboard.")
-                },
-                modifier = Modifier.weight(1f),
-                isPrimary = false
-            )
-        }
-    }
-}
-
-@Composable
-fun ReadingScreen(speechManager: SpeechManager) {
-    var documentContent by remember {
-        mutableStateOf(
-            "The Rights of Persons with Disabilities Act, 2016 gives effect to the United Nations Convention on the Rights of Persons with Disabilities. It recognizes 21 types of disabilities and mandates inclusive education, barrier-free access to public facilities, and digital accessibility across all public digital services."
-        )
-    }
-    var speechRate by remember { mutableFloatStateOf(1.0f) }
-    val scrollState = rememberScrollState()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("Universal Reading Hub", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            AccessibleButton(
-                text = "Play Aloud (Alt+R)",
-                onClick = {
-                    speechManager.setSpeechRate(speechRate)
-                    speechManager.speak(documentContent)
-                },
-                modifier = Modifier.weight(1f)
-            )
-            AccessibleButton(
-                text = "Stop Audio",
-                onClick = { speechManager.stop() },
-                modifier = Modifier.weight(1f),
-                isPrimary = false
-            )
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("Speech Rate: ${String.format(Locale.ROOT, "%.1fx", speechRate)}", style = MaterialTheme.typography.bodyLarge)
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                AccessibleButton(text = "-0.2x", onClick = {
-                    if (speechRate > 0.6f) speechRate -= 0.2f
-                }, isPrimary = false)
-                AccessibleButton(text = "+0.2x", onClick = {
-                    if (speechRate < 2.8f) speechRate += 0.2f
-                }, isPrimary = false)
-            }
-        }
-
-        AccessibleTextField(
-            value = documentContent,
-            onValueChange = { documentContent = it },
-            label = "Document Text View",
-            accessibilityDescription = "Document text body"
-        )
-    }
-}
-
-@Composable
-fun IDEScreen(speechManager: SpeechManager) {
-    var codeText by remember {
-        mutableStateOf("def welcome():\n    print(\"Hello, Blind Tech Foundation!\")\n\nwelcome()")
-    }
-    var consoleOutput by remember { mutableStateOf("Console ready. Press 'Run Code' to execute.") }
-    val scrollState = rememberScrollState()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("Accessible Code IDE", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-
-        AccessibleTextField(
-            value = codeText,
-            onValueChange = { codeText = it },
-            label = "Python / Web Source Code",
-            accessibilityDescription = "Code editor input area"
-        )
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            AccessibleButton(
-                text = "Run Code",
-                onClick = {
-                    consoleOutput = "Executing script...\nOutput:\nHello, Blind Tech Foundation!\n[Process completed with exit code 0]"
-                    speechManager.speak("Execution finished: Hello, Blind Tech Foundation!")
-                },
-                modifier = Modifier.weight(1f)
-            )
-            AccessibleButton(
-                text = "Clear",
-                onClick = {
-                    codeText = ""
-                    consoleOutput = "Code cleared."
-                },
-                modifier = Modifier.weight(1f),
-                isPrimary = false
-            )
-        }
-
-        Text("Terminal Output:", style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .border(1.5.dp, MaterialTheme.colorScheme.outline)
-                .padding(14.dp)
-                .semantics(mergeDescendants = true) { contentDescription = "Terminal: $consoleOutput" }
-        ) {
-            Text(consoleOutput, style = MaterialTheme.typography.bodyMedium)
-        }
-    }
-}
-
-fun convertNumberToWordsINR(amount: Long): String {
-    if (amount == 0L) return "Zero Rupees"
-    val units = arrayOf("", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
-        "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen")
-    val tens = arrayOf("", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety")
-
-    fun convertBelowThousand(n: Int): String {
-        return if (n < 20) units[n]
-        else if (n < 100) tens[n / 10] + if (n % 10 != 0) " " + units[n % 10] else ""
-        else units[n / 100] + " Hundred" + if (n % 100 != 0) " " + convertBelowThousand(n % 100) else ""
-    }
-
-    var num = amount
-    val cr = (num / 10000000).toInt()
-    num %= 10000000
-    val lk = (num / 100000).toInt()
-    num %= 100000
-    val th = (num / 1000).toInt()
-    num %= 1000
-    val rem = num.toInt()
-
-    val sb = StringBuilder()
-    if (cr > 0) sb.append(convertBelowThousand(cr)).append(" Crore ")
-    if (lk > 0) sb.append(convertBelowThousand(lk)).append(" Lakh ")
-    if (th > 0) sb.append(convertBelowThousand(th)).append(" Thousand ")
-    if (rem > 0) sb.append(convertBelowThousand(rem))
-    sb.append(" Rupees Only")
-    return sb.toString().trim()
-}
-
-@Composable
-fun BankingScreen(speechManager: SpeechManager) {
-    var name by remember { mutableStateOf("") }
-    var accountNumber by remember { mutableStateOf("") }
-    var amount by remember { mutableStateOf("") }
-    var wordsDisplay by remember { mutableStateOf("") }
-    var receiptText by remember { mutableStateOf("") }
-
-    val scrollState = rememberScrollState()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("Accessible Banking Form", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-
-        AccessibleTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = "Account Holder Name"
-        )
-
-        AccessibleTextField(
-            value = accountNumber,
-            onValueChange = {
-                val filtered = it.filter { c -> c.isDigit() }
-                accountNumber = filtered
-                if (filtered.isNotEmpty()) {
-                    speechManager.speak("Digit ${filtered.last()}", android.speech.tts.TextToSpeech.QUEUE_FLUSH)
-                }
-            },
-            label = "Account Number (Digits Only)"
-        )
-
-        AccessibleTextField(
-            value = amount,
-            onValueChange = { input ->
-                val filtered = input.filter { c -> c.isDigit() }
-                amount = filtered
-                val parsed = filtered.toLongOrNull() ?: 0L
-                wordsDisplay = if (parsed > 0) convertNumberToWordsINR(parsed) else ""
-            },
-            label = "Amount in ₹ (INR)"
-        )
-
-        if (wordsDisplay.isNotEmpty()) {
-            Text(
-                text = "In words: $wordsDisplay",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.semantics { contentDescription = "Amount in words: $wordsDisplay" }
-            )
-        }
-
-        AccessibleButton(
-            text = "Submit & Print Receipt (Alt+S)",
-            onClick = {
-                if (name.isNotBlank() && accountNumber.length >= 8 && amount.isNotBlank()) {
-                    val spokenSummary = "Confirming transaction. Beneficiary: $name. Account number ending in ${accountNumber.takeLast(4)}. Amount: $amount Rupees. $wordsDisplay."
-                    speechManager.speak(spokenSummary)
-                    receiptText = "TRANSACTION RECEIPT\nBeneficiary: $name\nAccount: $accountNumber\nAmount: ₹$amount\nWords: $wordsDisplay\nStatus: SUCCESSFUL"
-                } else {
-                    speechManager.speak("Please complete all banking form fields accurately.")
-                }
-            }
-        )
-
-        if (receiptText.isNotEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(2.dp, MaterialTheme.colorScheme.outline)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(16.dp)
-                    .semantics(mergeDescendants = true) { contentDescription = receiptText }
-            ) {
-                Text(receiptText, style = MaterialTheme.typography.bodyMedium)
-            }
-        }
-    }
-}
-
-@Composable
-fun FinanceScreen(speechManager: SpeechManager) {
-    var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("EMI Calculator", "SIP Planner", "Expense Tracker")
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        TabRow(selectedTabIndex = selectedTab) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTab == index,
-                    onClick = { selectedTab = index },
-                    text = { Text(title, fontSize = 14.sp) },
-                    modifier = Modifier.semantics { contentDescription = "Tab: $title" }
-                )
-            }
-        }
-
-        when (selectedTab) {
-            0 -> EMICalculatorTab(speechManager)
-            1 -> SIPPlannerTab(speechManager)
-            2 -> ExpenseTrackerTab(speechManager)
-        }
-    }
-}
-
-@Composable
-fun EMICalculatorTab(speechManager: SpeechManager) {
-    var principal by remember { mutableStateOf("500000") }
-    var rate by remember { mutableStateOf("8.5") }
-    var tenureYears by remember { mutableStateOf("5") }
-    var resultText by remember { mutableStateOf("") }
-
-    val scrollState = rememberScrollState()
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("EMI Loan Calculator", style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
-        AccessibleTextField(
-            value = principal,
-            onValueChange = { principal = it.filter { char -> char.isDigit() } },
-            label = "Principal Amount (INR)",
-            accessibilityDescription = "Principal Loan Amount in Indian Rupees"
-        )
-        AccessibleTextField(
-            value = rate,
-            onValueChange = { rate = it },
-            label = "Annual Interest Rate (%)",
-            accessibilityDescription = "Annual interest percentage"
-        )
-        AccessibleTextField(
-            value = tenureYears,
-            onValueChange = { tenureYears = it.filter { char -> char.isDigit() } },
-            label = "Tenure (Years)",
-            accessibilityDescription = "Loan period in years"
-        )
-
-        AccessibleButton(
-            text = "Calculate EMI (Alt+C)",
-            onClick = {
-                val p = principal.toDoubleOrNull() ?: 0.0
-                val r = (rate.toDoubleOrNull() ?: 0.0) / (12 * 100)
-                val n = (tenureYears.toDoubleOrNull() ?: 0.0) * 12
-
-                if (p > 0 && r > 0 && n > 0) {
-                    val emi = (p * r * (1 + r).pow(n)) / ((1 + r).pow(n) - 1)
-                    val totalPayment = emi * n
-                    val totalInterest = totalPayment - p
-                    resultText = "Monthly EMI: ₹${emi.toInt()}\nTotal Interest: ₹${totalInterest.toInt()}\nTotal Payable: ₹${totalPayment.toInt()}"
-                    speechManager.speak("Calculated EMI: ${emi.toInt()} Rupees per month. Total interest: ${totalInterest.toInt()} Rupees.")
-                } else {
-                    resultText = "Please enter valid numeric parameters."
-                    speechManager.speak("Invalid parameters entered.")
-                }
-            }
-        )
-
-        if (resultText.isNotEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(2.dp, MaterialTheme.colorScheme.outline)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(16.dp)
-                    .semantics(mergeDescendants = true) { contentDescription = resultText }
-            ) {
-                Text(resultText, style = MaterialTheme.typography.bodyLarge)
-            }
-        }
-    }
-}
-
-@Composable
-fun SIPPlannerTab(speechManager: SpeechManager) {
-    var monthlyInvestment by remember { mutableStateOf("5000") }
-    var expectedReturnRate by remember { mutableStateOf("12") }
-    var durationYears by remember { mutableStateOf("10") }
-    var resultText by remember { mutableStateOf("") }
-
-    val scrollState = rememberScrollState()
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("SIP Investment Planner", style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
-        AccessibleTextField(
-            value = monthlyInvestment,
-            onValueChange = { monthlyInvestment = it.filter { c -> c.isDigit() } },
-            label = "Monthly Investment (INR)",
-            accessibilityDescription = "Monthly systematic investment in Rupees"
-        )
-        AccessibleTextField(
-            value = expectedReturnRate,
-            onValueChange = { expectedReturnRate = it },
-            label = "Expected Annual Return (%)",
-            accessibilityDescription = "Expected annual rate of return"
-        )
-        AccessibleTextField(
-            value = durationYears,
-            onValueChange = { durationYears = it.filter { c -> c.isDigit() } },
-            label = "Duration (Years)",
-            accessibilityDescription = "Investment duration in years"
-        )
-
-        AccessibleButton(
-            text = "Calculate SIP Maturity",
-            onClick = {
-                val p = monthlyInvestment.toDoubleOrNull() ?: 0.0
-                val i = ((expectedReturnRate.toDoubleOrNull() ?: 0.0) / 100) / 12
-                val n = (durationYears.toDoubleOrNull() ?: 0.0) * 12
-
-                if (p > 0 && i > 0 && n > 0) {
-                    val maturity = p * (((1 + i).pow(n) - 1) / i) * (1 + i)
-                    val invested = p * n
-                    val gain = maturity - invested
-                    resultText = "Total Invested: ₹${invested.toInt()}\nEstimated Gains: ₹${gain.toInt()}\nMaturity Value: ₹${maturity.toInt()}"
-                    speechManager.speak("Maturity value: ${maturity.toInt()} Rupees. Total invested: ${invested.toInt()} Rupees.")
-                } else {
-                    resultText = "Please enter valid numeric parameters."
-                    speechManager.speak("Invalid investment numbers.")
-                }
-            }
-        )
-
-        if (resultText.isNotEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(2.dp, MaterialTheme.colorScheme.outline)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(16.dp)
-                    .semantics(mergeDescendants = true) { contentDescription = resultText }
-            ) {
-                Text(resultText, style = MaterialTheme.typography.bodyLarge)
-            }
-        }
-    }
-}
-
-data class ExpenseItem(val desc: String, val amount: Double, val category: String)
-
-@Composable
-fun ExpenseTrackerTab(speechManager: SpeechManager) {
-    var desc by remember { mutableStateOf("") }
-    var amountText by remember { mutableStateOf("") }
-    val expenses = remember {
-        mutableStateListOf(
-            ExpenseItem("Medicines", 650.0, "Health"),
-            ExpenseItem("Braille Paper", 400.0, "Study")
-        )
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Text("Daily Expense Log", style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
-        AccessibleTextField(value = desc, onValueChange = { desc = it }, label = "Item Description")
-        AccessibleTextField(
-            value = amountText,
-            onValueChange = { amountText = it.filter { c -> c.isDigit() || c == '.' } },
-            label = "Amount (INR)"
-        )
-
-        AccessibleButton(
-            text = "Add Expense (Alt+A)",
-            onClick = {
-                val amt = amountText.toDoubleOrNull() ?: 0.0
-                if (desc.isNotBlank() && amt > 0) {
-                    expenses.add(0, ExpenseItem(desc, amt, "General"))
-                    speechManager.speak("Added $desc for $amt Rupees.")
-                    desc = ""
-                    amountText = ""
 <!DOCTYPE html>
 <html lang="en" data-theme="high-contrast">
 <head>
@@ -1439,880 +561,508 @@ welcome()</textarea>
           <label for="expDesc">Item Description</label>
           <input type="text" id="expDesc" placeholder="e.g., Braille Notebook" />
         </div>
-        <di            }
-        )
+        <div class="form-group">
+          <label for="expAmt">Amount (₹)</label>
+          <input type="number" id="expAmt" placeholder="e.g., 250" />
+        </div>
+        <button class="btn" onclick="addExpense()">Add Expense (Alt+A)</button>
+        <h3 id="expTotal" style="margin-top:14px;">Total Spending: ₹0</h3>
+        <ul id="expList" style="list-style:none; margin-top:8px;"></ul>
+      </div>
+    </section>
 
-        val total = expenses.sumOf { it.amount }
-        Text(
-            text = "Total Spending: ₹${total.toInt()}",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.semantics { contentDescription = "Total spend is ${total.toInt()} Rupees" }
-        )
+    <section id="view-education" class="view-panel" aria-labelledby="h-education">
+      <h1 id="h-education">Competitive Exam & Q&A Hub</h1>
+      <div class="card">
+        <p>Tailored for UPSC CSE, UGC NET, SSC, and Banking Examinations.</p>
+        <div class="form-group">
+          <label for="examTopic">Enter Subject or Topic Prompt</label>
+          <input type="text" id="examTopic" placeholder="e.g. Fundamental Rights in Indian Constitution" />
+        </div>
+        <button class="btn" onclick="generateExamQA()">Generate AI Q&A (Alt+G)</button>
+        <div id="examQAOut" class="output-box" style="display:none;" tabindex="0"></div>
+      </div>
+    </section>
 
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(expenses) { item ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics(mergeDescendants = true) {
-                            contentDescription = "${item.desc}, amount: ${item.amount.toInt()} Rupees. Category: ${item.category}"
-                        },
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(item.desc, style = MaterialTheme.typography.bodyLarge)
-                        Text("₹${item.amount.toInt()}", style = MaterialTheme.typography.titleMedium)
-                    }
-                }
-            }
-        }
-    }
-}
+    <section id="view-study" class="view-panel" aria-labelledby="h-study">
+      <h1 id="h-study">Study Tools & Summarizer</h1>
+      <div class="card">
+        <label for="studyNotes">Study Notes / Book Excerpt</label>
+        <textarea id="studyNotes" rows="6">The Reserve Bank of India is the central bank of India which controls the issue and supply of the Indian rupee. It regulates banking operations, maintains financial stability, and manages inflation through policy repo rates.</textarea>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <button class="btn" onclick="summarizeStudyNotes()">Summarize Notes</button>
+          <button class="btn btn-secondary" onclick="speakText(document.getElementById('studyNotes').value)">Read Full Notes</button>
+        </div>
+        <div id="studySummaryOut" class="output-box" style="display:none;" tabindex="0"></div>
+      </div>
+    </section>
 
-@Composable
-fun EducationScreen(speechManager: SpeechManager) {
-    var examTopic by remember { mutableStateOf("") }
-    var generatedQA by remember { mutableStateOf("") }
-    val scrollState = rememberScrollState()
+    <section id="view-navigation" class="view-panel" aria-labelledby="h-nav">
+      <h1 id="h-nav">Navigation Assistant & Radar</h1>
+      <div class="card">
+        <button class="btn" onclick="speakLocation()">Announce GPS Location & Landmarks</button>
+        <div class="output-box" tabindex="0">
+📍 Current Coordinates: Bengaluru, Karnataka, India (Accuracy: 4 meters)
+🚶 State Bank Braille ATM: 250 meters Straight Ahead
+🚇 Metro Station Accessible Elevator: 420 meters North
+🔊 Audible Traffic Intersection: 110 meters ahead
+        </div>
+      </div>
+    </section>
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        Text("Competitive Exam & Q&A Hub", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-        Text("Curated preparation modules for UPSC CSE, UGC NET, SSC CGL, and Banking PO/Clerk exams.")
+    <section id="view-health" class="view-panel" aria-labelledby="h-health">
+      <h1 id="h-health">Health & Medication Scheduler</h1>
+      <div class="card">
+        <button class="btn" onclick="speakText('Medication schedule: Morning 8 AM, BP Tablet. Afternoon 1:30 PM, Eye drops. Night 9 PM, Calcium supplement.')">Read Today's Schedule</button>
+        <div class="output-box" tabindex="0">
+💊 08:00 AM: BP & Multivitamin (1 Tablet after breakfast)
+💧 01:30 PM: Eye Drops (2 Drops both eyes)
+💊 09:00 PM: Calcium Supplement (1 Tablet after dinner)
+📞 Emergency SOS: 112 / Family Contact
+        </div>
+      </div>
+    </section>
 
-        AccessibleTextField(
-            value = examTopic,
-            onValueChange = { examTopic = it },
-            label = "Exam Subject or Question Prompt",
-            placeholder = "e.g., Preamble of Indian Constitution or Monetary Policy"
-        )
+    <section id="view-daily" class="view-panel" aria-labelledby="h-daily">
+      <h1 id="h-daily">Daily Tasks & Accessible Calculator</h1>
+      <div class="card">
+        <h2>Audio Calculator</h2>
+        <div class="form-group">
+          <label for="calcInput">Calculation Expression</label>
+          <input type="text" id="calcInput" placeholder="e.g. 4500 * 12 or 500 + 350" />
+        </div>
+        <button class="btn" onclick="computeMath()">Calculate & Speak</button>
+        <div id="calcOut" class="output-box" style="display:none;" tabindex="0"></div>
+      </div>
+    </section>
 
-        AccessibleButton(
-            text = "Generate AI Exam Q&A (Alt+G)",
-            onClick = {
-                if (examTopic.isNotBlank()) {
-                    generatedQA = "Topic: $examTopic\n\nQuestion 1: Explain the key constitutional significance and legal precedents related to $examTopic.\nAnswer: In Indian jurisprudence, this forms an essential component of constitutional governance, ensuring equality before the law, substantive justice, and enforceable rights upheld by judicial review."
-                    speechManager.speak("Generated Questions for $examTopic. Question one: Explain the key constitutional significance and legal precedents.")
-                } else {
-                    speechManager.speak("Please enter an exam subject or question prompt first.")
-                }
-            }
-        )
+    <section id="view-agriculture" class="view-panel" aria-labelledby="h-agri">
+      <h1 id="h-agri">Agriculture & Mandi Rates</h1>
+      <div class="card">
+        <button class="btn" onclick="speakText('Mandi Rates: Wheat is 2,275 Rupees per quintal. Paddy Grade A is 2,183 Rupees per quintal.')">Announce Mandi Rates</button>
+        <div class="output-box" tabindex="0">
+🌾 Wheat: ₹2,275 / Quintal (State Mandi)
+🌾 Paddy (Grade A): ₹2,183 / Quintal
+🌱 Crop Protection: Organic Neem oil spray recommended for pest mitigation
+📢 PM-KISAN: 16th Installment DBT verification active
+        </div>
+      </div>
+    </section>
 
-        if (generatedQA.isNotEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(2.dp, MaterialTheme.colorScheme.outline)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(16.dp)
-                    .semantics(mergeDescendants = true) { contentDescription = generatedQA }
-            ) {
-                Text(generatedQA, style = MaterialTheme.typography.bodyMedium)
-            }
-        }
-    }
-}
+    <section id="view-legal" class="view-panel" aria-labelledby="h-legal">
+      <h1 id="h-legal">Disability Rights & Legal Schemes</h1>
+      <div class="card">
+        <div class="output-box" tabindex="0">
+⚖️ RPwD Act 2016: 4% reservation in government vacancies, free education up to 18 years.
+💳 UDID Card: Single verified disability identification for welfare benefits.
+🛠️ ADIP Scheme: Free distribution of assistive aids, accessible laptops, and braille equipment.
+💰 National Disability Pension: State-categorized monthly social security.
+        </div>
+        <button class="btn" onclick="speakText('The Rights of Persons with Disabilities Act guarantees 4 percent reservations in jobs, free education, and free assistive equipment under the ADIP scheme.')">Listen Summary</button>
+      </div>
+    </section>
 
-@Composable
-fun StudyScreen(speechManager: SpeechManager) {
-    var studyNotes by remember {
-        mutableStateOf("Chapter Notes: The Reserve Bank of India regulates monetary policy through instruments like repo rate, reverse repo rate, and cash reserve ratio. Maintaining price stability while supporting economic growth remains its primary objective.")
-    }
-    var summaryOutput by remember { mutableStateOf("") }
-    val scrollState = rememberScrollState()
+    <section id="view-media" class="view-panel" aria-labelledby="h-media">
+      <h1 id="h-media">Accessible Media Tools</h1>
+      <div class="card">
+        <button class="btn" onclick="speakText('Audio trimmer tool initialized. Ready for recording upload.')">Audio Track Trimmer</button>
+        <button class="btn btn-secondary" onclick="speakText('Speech normalizer ready. Level set to 90 decibels.')">Volume Normalizer</button>
+        <button class="btn btn-secondary" onclick="speakText('Subtitle to speech narrator active.')">Video Audio Describer</button>
+      </div>
+    </section>
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("Study & Summarizer Hub", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
+    <section id="view-articles" class="view-panel" aria-labelledby="h-art">
+      <h1 id="h-art">Tutorials & Knowledge Hub</h1>
+      <div class="card">
+        <h3>Mastering TalkBack & NVDA</h3>
+        <p>Comprehensive guide to multi-finger gestures, reading controls, and external Bluetooth keyboard shortcuts.</p>
+        <button class="btn" onclick="speakText('Article: Mastering TalkBack and NVDA. Learn navigation gestures, reading granularity, and hardware shortcut combinations.')">Read Article</button>
+      </div>
+    </section>
 
-        AccessibleTextField(
-            value = studyNotes,
-            onValueChange = { studyNotes = it },
-            label = "Study Material or Textbook Excerpt",
-            accessibilityDescription = "Study notes input text"
-        )
+    <section id="view-news" class="view-panel" aria-labelledby="h-news">
+      <h1 id="h-news">Daily Accessibility News Feed</h1>
+      <div class="card">
+        <h3>National Digital Accessibility Mandate</h3>
+        <p>All higher educational portals and exam platforms required to meet WCAG 2.1 AAA accessibility standards.</p>
+        <button class="btn" onclick="speakText('News: Government mandates complete digital accessibility for all higher educational examination portals across the country.')">Listen News</button>
+      </div>
+    </section>
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            AccessibleButton(
-                text = "Summarize Notes",
-                onClick = {
-                    summaryOutput = "Summary Takeaways:\n1. RBI controls monetary policy.\n2. Primary tools: Repo Rate, Reverse Repo, CRR.\n3. Core aim: Price stability and economic growth."
-                    speechManager.speak("Summary generated. Key point one: RBI controls monetary policy. Key point two: Primary tools include repo rate and CRR.")
-                },
-                modifier = Modifier.weight(1f)
-            )
-            AccessibleButton(
-                text = "Read Notes",
-                onClick = { speechManager.speak(studyNotes) },
-                modifier = Modifier.weight(1f),
-                isPrimary = false
-            )
-        }
+    <section id="view-vault" class="view-panel" aria-labelledby="h-vault">
+      <h1 id="h-vault">Smart Software Vault</h1>
+      <div class="card">
+        <h3>Curated Assistive Software</h3>
+        <p>• NVDA Screen Reader 2026<br>• TalkBack Custom Bluetooth Keymap<br>• Kokoro-82 Neural TTS Engine<br>• Accessible Audio Graph Plotter</p>
+        <button class="btn" onclick="speakText('Software Vault: NVDA 2026, TalkBack Bluetooth keymaps, and Kokoro 82 neural voice models available.')">Listen Catalog</button>
+      </div>
+    </section>
 
-        if (summaryOutput.isNotEmpty()) {
-            Text("Summary Highlights:", style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(2.dp, MaterialTheme.colorScheme.outline)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(14.dp)
-                    .semantics(mergeDescendants = true) { contentDescription = summaryOutput }
-            ) {
-                Text(summaryOutput, style = MaterialTheme.typography.bodyMedium)
-            }
-        }
-    }
-}
+    <section id="view-community" class="view-panel" aria-labelledby="h-comm">
+      <h1 id="h-comm">Community & Scribe Support</h1>
+      <div class="card">
+        <button class="btn" onclick="speakText('Opening volunteer and scribe request registry.')">Find Exam Scribe</button>
+        <button class="btn btn-secondary" onclick="speakText('Submit audio ticket. Recording input ready.')">Voice Feedback & Bug Report</button>
+      </div>
+    </section>
+  </main>
 
-@Composable
-fun NavigationAssistScreen(speechManager: SpeechManager) {
-    val items = listOf(
-        "Current GPS Location" to "Bengaluru, Karnataka, India. Accuracy: Within 4 meters.",
-        "Nearby Accessible Bank" to "State Bank of India Braille ATM - 250 meters straight.",
-        "Public Transport Stop" to "Metro Station West Entrance (Elevator Equipped) - 400 meters North.",
-        "Pedestrian Crossing" to "Audible traffic signal intersection - 120 meters ahead."
-    )
-    val scrollState = rememberScrollState()
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("Navigation & Mobility Assistant", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-        AccessibleButton(
-            text = "Announce Nearby Landmarks",
-            onClick = { speechManager.speak("Current location: Bengaluru, Karnataka. Nearest landmark: State Bank of India Braille ATM, 250 meters straight.") }
-        )
-        items.forEach { item ->
-            AccessibleActionCard(
-                title = item.first,
-                subtitle = item.second,
-                onClick = { speechManager.speak("${item.first}: ${item.second}") }
-            )
-        }
-    }
-}
+  <button class="fab-voice" onclick="toggleVoiceSearch()" aria-label="Voice Command Assistant. Tap to speak destinations or tools.">🎤</button>
 
-@Composable
-fun HealthScreen(speechManager: SpeechManager) {
-    val items = listOf(
-        "Morning Medication (8:00 AM)" to "Multivitamin and BP Tablet (1 Tablet after breakfast).",
-        "Afternoon Medication (1:30 PM)" to "Eye drops (Both eyes, 2 drops).",
-        "Night Medication (9:00 PM)" to "Calcium supplement (1 Tablet after dinner).",
-        "Emergency SOS Contact" to "Primary family contact and local emergency services (112)."
-    )
-    val scrollState = rememberScrollState()
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("Health & Wellness Hub", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-        AccessibleButton(
-            text = "Read Today's Medication Schedule",
-            onClick = { speechManager.speak("Medication schedule: Morning 8 AM: Multivitamin and BP Tablet. Afternoon 1:30 PM: Eye drops. Night 9 PM: Calcium supplement.") }
-        )
-        items.forEach { item ->
-            AccessibleActionCard(
-                title = item.first,
-                subtitle = item.second,
-                onClick = { speechManager.speak("${item.first}: ${item.second}") }
-            )
-        }
-    }
-}
+  <nav class="bottom-nav" aria-label="Bottom Navigation">
+    <button class="nav-btn active" id="bnav-home" onclick="navigate('home')">
+      <span aria-hidden="true">🏠</span><span>Home</span>
+    </button>
+    <button class="nav-btn" id="bnav-ocr" onclick="navigate('ocr')">
+      <span aria-hidden="true">📷</span><span>OCR</span>
+    </button>
+    <button class="nav-btn" id="bnav-reading" onclick="navigate('reading')">
+      <span aria-hidden="true">📖</span><span>Reader</span>
+    </button>
+    <button class="nav-btn" id="bnav-banking" onclick="navigate('banking')">
+      <span aria-hidden="true">🏦</span><span>Banking</span>
+    </button>
+    <button class="nav-btn" id="bnav-finance" onclick="navigate('finance')">
+      <span aria-hidden="true">💰</span><span>Finance</span>
+    </button>
+  </nav>
 
-@Composable
-fun DailyTasksScreen(speechManager: SpeechManager) {
-    val tasks = listOf(
-        "Study Session (11:00 AM)" to "Revise Indian Constitution Chapter 4 and complete 10 MCQs.",
-        "Banking Reminder (2:00 PM)" to "Check account statement and deposit savings.",
-        "Assistive Tech Practice (5:00 PM)" to "Practice Bluetooth keyboard shortcuts on Android IDE."
-    )
-    val scrollState = rememberScrollState()
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("Daily Tasks & Utilities", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-        AccessibleButton(
-            text = "Spoken Task Overview",
-            onClick = { speechManager.speak("You have 3 scheduled tasks today: Study Session at 11 AM, Banking Reminder at 2 PM, and Assistive Tech Practice at 5 PM.") }
-        )
-        tasks.forEach { item ->
-            AccessibleActionCard(
-                title = item.first,
-                subtitle = item.second,
-                onClick = { speechManager.speak("${item.first}: ${item.second}") }
-            )
-        }
-    }
-}
+  <script>
+    let speechRate = 1.0;
+    const synth = window.speechSynthesis;
 
-@Composable
-fun AgricultureScreen(speechManager: SpeechManager) {
-    val agriData = listOf(
-        "Mandi Rates (Wheat)" to "₹2,275 per Quintal (State Mandi average).",
-        "Mandi Rates (Paddy)" to "₹2,183 per Quintal (Grade A).",
-        "Pest Management Advisory" to "Apply organic neem oil solution for stem borer mitigation in early crop stage.",
-        "PM-KISAN Status" to "Direct Benefit Transfer portal operational. Check 16th installment eligibility."
-    )
-    val scrollState = rememberScrollState()
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("Agriculture Advisory & Mandi Rates", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-        AccessibleButton(
-            text = "Announce Mandi Rates",
-            onClick = { speechManager.speak("Today's Mandi Rates: Wheat is 2,275 Rupees per quintal. Paddy Grade A is 2,183 Rupees per quintal.") }
-        )
-        agriData.forEach { item ->
-            AccessibleActionCard(
-                title = item.first,
-                subtitle = item.second,
-                onClick = { speechManager.speak("${item.first}: ${item.second}") }
-            )
-        }
-    }
-}
-
-@Composable
-fun LegalScreen(speechManager: SpeechManager) {
-    val schemes = listOf(
-        "RPwD Act 2016" to "Comprehensive legislation mandating 4% reservation in government vacancies, free education up to 18 years, and accessible infrastructure.",
-        "Unique Disability ID (UDID)" to "National single document verifying disability status across state and central departments.",
-        "ADIP Scheme" to "Free distribution and assistance to disabled persons for purchasing assistive equipment, laptops, and braille devices.",
-        "National Disability Pension" to "Monthly financial pension guidelines categorized by state welfare boards."
-    )
-    val scrollState = rememberScrollState()
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("Legal Rights & Government Welfare", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-        schemes.forEach { item ->
-            AccessibleActionCard(
-                title = item.first,
-                subtitle = item.second,
-                onClick = { speechManager.speak("${item.first}: ${item.second}") }
-            )
-        }
-    }
-}
-
-@Composable
-fun MediaToolsScreen(speechManager: SpeechManager) {
-    val tools = listOf(
-        "Audio Track Trimmer" to "Trim and edit spoken notes, interviews, and voice memos.",
-        "Speech Volume Normalizer" to "Amplify low-volume recordings to standard accessibility decibel levels.",
-        "Audio Description Isolator" to "Extract and generate spoken description tracks from video subtitles."
-    )
-    val scrollState = rememberScrollState()
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("Accessible Media Tools", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-        tools.forEach { item ->
-            AccessibleActionCard(
-                title = item.first,
-                subtitle = item.second,
-                onClick = { speechManager.speak("${item.first} selected. Tool ready for file import.") }
-            )
-        }
-    }
-}
-
-@Composable
-fun ArticlesScreen(speechManager: SpeechManager) {
-    val articles = listOf(
-        "Screen Reader Navigation Mastery" to "Complete handbook of gestures and keyboard shortcuts for Google TalkBack and NVDA.",
-        "Python Coding for Visually Impaired" to "Setting up screen-reader accessible virtual environments, linters, and terminals.",
-        "Accessible Banking Procedures" to "Guidelines on operating net banking, UPI, and ATM facilities safely with audio verification."
-    )
-    val scrollState = rememberScrollState()
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("Tutorials & Articles Hub", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-        articles.forEach { item ->
-            AccessibleActionCard(
-                title = item.first,
-                subtitle = item.second,
-                onClick = { speechManager.speak("Reading article: ${item.first}. ${item.second}") }
-            )
-        }
-    }
-}
-
-@Composable
-fun NewsScreen(speechManager: SpeechManager) {
-    val newsItems = listOf(
-        "National Accessibility Standard Mandate" to "Government issues directives requiring 100% digital accessibility for all higher education portals.",
-        "UPSC Introduces Screen Reader Exam Software" to "Standardized accessibility laptops approved for competitive exam aspirants.",
-        "Open-Source Assistive Innovations" to "Blind Tech Foundation updates multi-tool Android suite with high-contrast AAA themes."
-    )
-    val scrollState = rememberScrollState()
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("Daily Accessibility News Feed", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-        newsItems.forEach { item ->
-            AccessibleActionCard(
-                title = item.first,
-                subtitle = item.second,
-                onClick = { speechManager.speak("News update: ${item.first}. ${item.second}") }
-            )
-        }
-    }
-}
-
-@Composable
-fun SoftwareVaultScreen(speechManager: SpeechManager) {
-    val software = listOf(
-        "NVDA 2026 Stable Screen Reader" to "Latest community release featuring enhanced Hindi, Tamil, and Indian English speech dictionaries.",
-        "TalkBack Custom Keyboard Map" to "Hardware key-remapping profile for Bluetooth QWERTY keyboards.",
-        "Kokoro-82 Neural TTS" to "High-speed offline text-to-speech model for clear natural synthesis.",
-        "Accessible Math Viewer" to "Speech and braille interpreter for mathematical equations and graphs."
-    )
-    val scrollState = rememberScrollState()
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("Smart Software Vault", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-        software.forEach { item ->
-            AccessibleActionCard(
-                title = item.first,
-                subtitle = item.second,
-                onClick = { speechManager.speak("Selected ${item.first}. ${item.second}. Direct download available.") }
-            )
-        }
-    }
-}
-
-@Composable
-fun CommunityScreen(speechManager: SpeechManager) {
-    val communityHubs = listOf(
-        "Tech Support & Discussion Forum" to "Ask queries, resolve software challenges, and share custom scripts with peer members.",
-        "Submit Voice Feedback" to "Dictate bug reports, app suggestions, or feature requests directly to developers.",
-        "Volunteer & Scribe Network" to "Register as an exam scribe or find qualified accessibility readers across India.",
-        "Foundation Donations" to "Support open-source accessibility software development and community workshops."
-    )
-    val scrollState = rememberScrollState()
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("Community, Scribes & Support", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-        communityHubs.forEach { item ->
-            AccessibleActionCard(
-                title = item.first,
-                subtitle = item.second,
-                onClick = { speechManager.speak("${item.first}: ${item.second}") }
-            )
-        }
-    }
-}
-// =================================================================================================
-// File 10: app/src/main/java/org/blindtechfoundation/app/MainActivity.kt
-// =================================================================================================
-package org.blindtechfoundation.app
-
-import android.content.Intent
-import android.net.Uri
-import android.os.Bundle
-import android.speech.RecognizerIntent
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BrightnessMedium
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.VolumeUp
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberDrawerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.isAltPressed
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onKeyEvent
-import androidx.compose.ui.input.key.type
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.launch
-import org.blindtechfoundation.app.accessibility.AccessibilityUtils
-import org.blindtechfoundation.app.accessibility.SpeechManager
-import org.blindtechfoundation.app.network.UpdateChecker
-import org.blindtechfoundation.app.network.UpdateInfo
-import org.blindtechfoundation.app.ui.components.AccessibleButton
-import org.blindtechfoundation.app.ui.navigation.BottomNavItems
-import org.blindtechfoundation.app.ui.navigation.Screen
-import org.blindtechfoundation.app.ui.screens.AgricultureScreen
-import org.blindtechfoundation.app.ui.screens.ArticlesScreen
-import org.blindtechfoundation.app.ui.screens.BankingScreen
-import org.blindtechfoundation.app.ui.screens.CommunityScreen
-import org.blindtechfoundation.app.ui.screens.DailyTasksScreen
-import org.blindtechfoundation.app.ui.screens.EducationScreen
-import org.blindtechfoundation.app.ui.screens.FinanceScreen
-import org.blindtechfoundation.app.ui.screens.HealthScreen
-import org.blindtechfoundation.app.ui.screens.HomeScreen
-import org.blindtechfoundation.app.ui.screens.IDEScreen
-import org.blindtechfoundation.app.ui.screens.LegalScreen
-import org.blindtechfoundation.app.ui.screens.MediaToolsScreen
-import org.blindtechfoundation.app.ui.screens.NavigationAssistScreen
-import org.blindtechfoundation.app.ui.screens.NewsScreen
-import org.blindtechfoundation.app.ui.screens.OCRScreen
-import org.blindtechfoundation.app.ui.screens.ReadingScreen
-import org.blindtechfoundation.app.ui.screens.SoftwareVaultScreen
-import org.blindtechfoundation.app.ui.screens.StudyScreen
-import org.blindtechfoundation.app.ui.theme.AppThemeMode
-import org.blindtechfoundation.app.ui.theme.BlindTechTheme
-import java.util.Locale
-
-class MainActivity : ComponentActivity() {
-
-    private lateinit var speechManager: SpeechManager
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        speechManager = SpeechManager(this)
-
-        val currentVersionCode = try {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                packageManager.getPackageInfo(packageName, android.content.pm.PackageManager.PackageInfoFlags.of(0)).longVersionCode.toInt()
-            } else {
-                @Suppress("DEPRECATION")
-                packageManager.getPackageInfo(packageName, 0).versionCode
-            }
-        } catch (e: Exception) {
-            1
-        }
-
-        setContent {
-            var themeMode by remember { mutableStateOf(AppThemeMode.HIGH_CONTRAST) }
-            var updateInfo by remember { mutableStateOf<UpdateInfo?>(null) }
-
-            LaunchedEffect(Unit) {
-                lifecycleScope.launch {
-                    val checker = UpdateChecker()
-                    val info = checker.checkForUpdates(currentVersionCode)
-                    if (info.hasUpdate) {
-                        updateInfo = info
-                    }
-                }
-            }
-
-            BlindTechTheme(mode = themeMode) {
-                if (updateInfo != null && updateInfo!!.hasUpdate) {
-                    UpdateRequiredDialog(updateInfo = updateInfo!!)
-                } else {
-                    MainApplicationContent(
-                        speechManager = speechManager,
-                        themeMode = themeMode,
-                        onToggleTheme = {
-                            themeMode = when (themeMode) {
-                                AppThemeMode.HIGH_CONTRAST -> AppThemeMode.DARK
-                                AppThemeMode.DARK -> AppThemeMode.LIGHT
-                                AppThemeMode.LIGHT -> AppThemeMode.HIGH_CONTRAST
-                            }
-                        }
-                    )
-                }
-            }
-        }
+    function announce(text) {
+      const live = document.getElementById('liveAnnouncer');
+      if (live) {
+        live.textContent = '';
+        setTimeout(() => { live.textContent = text; }, 50);
+      }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        speechManager.shutdown()
-    }
-}
-
-@Composable
-fun UpdateRequiredDialog(updateInfo: UpdateInfo) {
-    val context = LocalContext.current
-    AlertDialog(
-        onDismissRequest = {},
-        confirmButton = {
-            AccessibleButton(
-                text = "Update Now",
-                onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(updateInfo.downloadUrl)).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    }
-                    context.startActivity(intent)
-                },
-                contentDescription = "Update Now. Opens browser or app store update source."
-            )
-        },
-        title = {
-            Text(
-                text = "App Update Required",
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.semantics { heading() }
-            )
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Version ${updateInfo.latestVersionName} is available.")
-                Text(updateInfo.releaseNotes)
-            }
-        },
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.semantics {
-            contentDescription = "Mandatory Update Dialog. Release notes: ${updateInfo.releaseNotes}"
-        }
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun MainApplicationContent(
-    speechManager: SpeechManager,
-    themeMode: AppThemeMode,
-    onToggleTheme: () -> Unit
-) {
-    val context = LocalContext.current
-    val navController = rememberNavController()
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val coroutineScope = rememberCoroutineScope()
-
-    val speechRecognizerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == ComponentActivity.RESULT_OK) {
-            val spokenMatches = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-            val query = spokenMatches?.firstOrNull()?.lowercase(Locale.ROOT) ?: ""
-            if (query.isNotBlank()) {
-                speechManager.speak("Navigating to: $query")
-                when {
-                    "ocr" in query || "camera" in query -> navController.navigate(Screen.OCR.route)
-                    "read" in query || "book" in query -> navController.navigate(Screen.Reading.route)
-                    "bank" in query -> navController.navigate(Screen.Banking.route)
-                    "code" in query || "ide" in query -> navController.navigate(Screen.IDE.route)
-                    "home" in query -> navController.navigate(Screen.Home.route)
-                    "finance" in query || "money" in query || "emi" in query -> navController.navigate(Screen.Finance.route)
-                    "education" in query || "exam" in query -> navController.navigate(Screen.Education.route)
-                    "study" in query || "notes" in query -> navController.navigate(Screen.Study.route)
-                    "navigation" in query || "gps" in query -> navController.navigate(Screen.NavigationAssist.route)
-                    "health" in query || "medicine" in query -> navController.navigate(Screen.Health.route)
-                    "task" in query || "todo" in query -> navController.navigate(Screen.DailyTasks.route)
-                    "agriculture" in query || "farming" in query || "mandi" in query -> navController.navigate(Screen.Agriculture.route)
-                    "legal" in query || "scheme" in query || "rpwd" in query -> navController.navigate(Screen.Legal.route)
-                    "media" in query || "audio" in query -> navController.navigate(Screen.MediaTools.route)
-                    "article" in query -> navController.navigate(Screen.Articles.route)
-                    "news" in query -> navController.navigate(Screen.News.route)
-                    "vault" in query || "software" in query -> navController.navigate(Screen.SoftwareVault.route)
-                    "community" in query || "support" in query -> navController.navigate(Screen.Community.route)
-                    else -> speechManager.speak("No destination found matching: $query")
-                }
-            }
-        }
+    function speakText(text) {
+      if (!synth) {
+        announce(text);
+        return;
+      }
+      synth.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = speechRate;
+      utterance.lang = 'en-IN';
+      synth.speak(utterance);
+      announce(text);
     }
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(
-                        text = "Blind Tech Navigation",
-                        style = MaterialTheme.typography.headlineSmall,
-                        modifier = Modifier
-                            .padding(bottom = 12.dp)
-                            .semantics { heading() }
-                    )
-
-                    val drawerDestinations = listOf(
-                        Screen.Home to "Home Dashboard",
-                        Screen.OCR to "OCR & Scene Reader",
-                        Screen.Reading to "Universal Reading Hub",
-                        Screen.IDE to "Accessible Code IDE",
-                        Screen.Banking to "Banking Assistant",
-                        Screen.Finance to "Finance & Calculators",
-                        Screen.Education to "Competitive Exams",
-                        Screen.Study to "Study Tools & Summarizer",
-                        Screen.NavigationAssist to "Navigation & Mobility",
-                        Screen.Health to "Health & Medication",
-                        Screen.DailyTasks to "Daily Tasks & Utilities",
-                        Screen.Agriculture to "Agriculture & Mandi",
-                        Screen.Legal to "Legal & RPwD Schemes",
-                        Screen.MediaTools to "Media Tools",
-                        Screen.Articles to "Articles & Tutorials",
-                        Screen.News to "Daily News Feed",
-                        Screen.SoftwareVault to "Software Vault",
-                        Screen.Community to "Community & Support"
-                    )
-
-                    drawerDestinations.forEach { (screen, label) ->
-                        NavigationDrawerItem(
-                            label = { Text(label) },
-                            selected = false,
-                            onClick = {
-                                coroutineScope.launch { drawerState.close() }
-                                navController.navigate(screen.route) {
-                                    popUpTo(Screen.Home.route) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        )
-                    }
-                }
-            }
-        }
-    ) {
-        Scaffold(
-            modifier = Modifier
-                .fillMaxSize()
-                .onKeyEvent { keyEvent ->
-                    if (keyEvent.type == KeyEventType.KeyDown && keyEvent.isAltPressed) {
-                        when (keyEvent.key) {
-                            Key.H -> { navController.navigate(Screen.Home.route); true }
-                            Key.O -> { navController.navigate(Screen.OCR.route); true }
-                            Key.R -> { navController.navigate(Screen.Reading.route); true }
-                            Key.S -> { navController.navigate(Screen.Banking.route); true }
-                            Key.I -> { navController.navigate(Screen.IDE.route); true }
-                            Key.F -> { navController.navigate(Screen.Finance.route); true }
-                            Key.E -> { navController.navigate(Screen.Education.route); true }
-                            else -> false
-                        }
-                    } else false
-                },
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = "Blind Tech Foundation",
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(
-                            onClick = {
-                                coroutineScope.launch { drawerState.open() }
-                            },
-                            modifier = Modifier
-                                .size(48.dp)
-                                .semantics {
-                                    contentDescription = "Open Navigation Menu. Drawer with 16 assistive hubs."
-                                }
-                        ) {
-                            Icon(Icons.Default.Menu, contentDescription = null)
-                        }
-                    },
-                    actions = {
-                        IconButton(
-                            onClick = {
-                                AccessibilityUtils.triggerHapticFeedback(context)
-                                onToggleTheme()
-                                speechManager.speak("Theme switched to ${themeMode.name}")
-                            },
-                            modifier = Modifier
-                                .size(48.dp)
-                                .semantics {
-                                    contentDescription = "Switch Visual Theme. Current: ${themeMode.name}"
-                                }
-                        ) {
-                            Icon(Icons.Default.BrightnessMedium, contentDescription = null)
-                        }
-
-                        IconButton(
-                            onClick = {
-                                AccessibilityUtils.triggerHapticFeedback(context)
-                                speechManager.speak("Speech output verified. System Text-to-Speech active.")
-                            },
-                            modifier = Modifier
-                                .size(48.dp)
-                                .semantics {
-                                    contentDescription = "Audio feedback trigger"
-                                }
-                        ) {
-                            Icon(Icons.Default.VolumeUp, contentDescription = null)
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface
-                    )
-                )
-            },
-            bottomBar = {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentRoute = navBackStackEntry?.destination?.route
-
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 8.dp
-                ) {
-                    BottomNavItems.forEach { screen ->
-                        NavigationBarItem(
-                            icon = { screen.icon?.let { Icon(it, contentDescription = null) } },
-                            label = { Text(screen.title) },
-                            selected = currentRoute == screen.route,
-                            onClick = {
-                                AccessibilityUtils.triggerHapticFeedback(context)
-                                if (currentRoute != screen.route) {
-                                    navController.navigate(screen.route) {
-                                        popUpTo(Screen.Home.route) { saveState = true }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                }
-                            },
-                            modifier = Modifier.semantics {
-                                contentDescription = "${screen.title} Navigation Tab"
-                            }
-                        )
-                    }
-                }
-            },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = {
-                        AccessibilityUtils.triggerHapticFeedback(context)
-                        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-IN")
-                            putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak destination (e.g. OCR, Banking, Finance, Study)")
-                        }
-                        try {
-                            speechRecognizerLauncher.launch(intent)
-                        } catch (e: Exception) {
-                            speechManager.speak("Speech recognition service is not available on this device.")
-                        }
-                    },
-                    modifier = Modifier
-                        .size(64.dp)
-                        .semantics {
-                            contentDescription = "Floating Voice Assistant. Double tap to speak in-app commands."
-                        }
-                ) {
-                    Icon(Icons.Default.Mic, contentDescription = null, modifier = Modifier.size(32.dp))
-                }
-            }
-        ) { innerPadding ->
-            NavHost(
-                navController = navController,
-                startDestination = Screen.Home.route,
-                modifier = Modifier.padding(innerPadding)
-            ) {
-                composable(Screen.Home.route) { HomeScreen(navController, speechManager) }
-                composable(Screen.OCR.route) { OCRScreen(speechManager) }
-                composable(Screen.Reading.route) { ReadingScreen(speechManager) }
-                composable(Screen.IDE.route) { IDEScreen(speechManager) }
-                composable(Screen.Banking.route) { BankingScreen(speechManager) }
-                composable(Screen.Finance.route) { FinanceScreen(speechManager) }
-                composable(Screen.Education.route) { EducationScreen(speechManager) }
-                composable(Screen.Study.route) { StudyScreen(speechManager) }
-                composable(Screen.NavigationAssist.route) { NavigationAssistScreen(speechManager) }
-                composable(Screen.Health.route) { HealthScreen(speechManager) }
-                composable(Screen.DailyTasks.route) { DailyTasksScreen(speechManager) }
-                composable(Screen.Agriculture.route) { AgricultureScreen(speechManager) }
-                composable(Screen.Legal.route) { LegalScreen(speechManager) }
-                composable(Screen.MediaTools.route) { MediaToolsScreen(speechManager) }
-                composable(Screen.Articles.route) { ArticlesScreen(speechManager) }
-                composable(Screen.News.route) { NewsScreen(speechManager) }
-                composable(Screen.SoftwareVault.route) { SoftwareVaultScreen(speechManager) }
-                composable(Screen.Community.route) { CommunityScreen(speechManager) }
-            }
-        }
+    function stopAllSpeech() {
+      if (synth) synth.cancel();
+      announce("Audio playback stopped.");
     }
-}moteVersionCode > currentVersionCode
-                UpdateInfo(
+
+    function updateSpeechRate(val) {
+      speechRate = parseFloat(val);
+      document.getElementById('speedLabel').textContent = speechRate.toFixed(2) + 'x';
+      announce("Reading speed set to " + speechRate + " times.");
+    }
+
+    function toggleDrawer(open) {
+      const drawer = document.getElementById('sideDrawer');
+      const overlay = document.getElementById('drawerOverlay');
+      if (open) {
+        drawer.classList.add('open');
+        overlay.classList.add('active');
+        announce("Navigation menu opened.");
+      } else {
+        drawer.classList.remove('open');
+        overlay.classList.remove('active');
+        announce("Navigation menu closed.");
+      }
+    }
+
+    function navigate(viewId) {
+      toggleDrawer(false);
+      document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+      const target = document.getElementById('view-' + viewId);
+      if (target) {
+        target.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        const heading = target.querySelector('h1, h2');
+        if (heading) {
+          heading.setAttribute('tabindex', '-1');
+          heading.focus();
+        }
+        announce("Opened " + viewId + " screen.");
+      }
+      document.querySelectorAll('.bottom-nav .nav-btn').forEach(btn => btn.classList.remove('active'));
+      const navBtn = document.getElementById('bnav-' + viewId);
+      if (navBtn) navBtn.classList.add('active');
+    }
+
+    const themes = ["high-contrast", "dark", "light"];
+    function cycleTheme() {
+      const html = document.documentElement;
+      let cur = html.getAttribute('data-theme') || "high-contrast";
+      let next = themes[(themes.indexOf(cur) + 1) % themes.length];
+      html.setAttribute('data-theme', next);
+      announce("Theme switched to " + next);
+      speakText("Theme " + next);
+    }
+
+    function toggleScreenCurtain() {
+      const curtain = document.getElementById('screenCurtain');
+      if (curtain.style.display === 'block') {
+        curtain.style.display = 'none';
+        speakText("Screen curtain deactivated. Display visible.");
+      } else {
+        curtain.style.display = 'block';
+        speakText("Screen curtain activated. Display is blacked out for privacy.");
+      }
+    }
+
+    function triggerSOS() {
+      speakText("Initiating emergency SOS call to 112.");
+      window.location.href = "tel:112";
+    }
+
+    function toggleVoiceSearch() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        speakText("Voice recognition not supported by browser engine.");
+        return;
+      }
+      const rec = new SpeechRecognition();
+      rec.lang = 'en-IN';
+      rec.onstart = () => speakText("Listening for command...");
+      rec.onresult = (e) => {
+        const cmd = e.results[0][0].transcript.toLowerCase();
+        announce("Heard command: " + cmd);
+        if (cmd.includes("ocr") || cmd.includes("camera")) navigate("ocr");
+        else if (cmd.includes("read") || cmd.includes("book")) navigate("reading");
+        else if (cmd.includes("bank")) navigate("banking");
+        else if (cmd.includes("code") || cmd.includes("ide")) navigate("ide");
+        else if (cmd.includes("finance") || cmd.includes("money") || cmd.includes("emi")) navigate("finance");
+        else if (cmd.includes("exam") || cmd.includes("education")) navigate("education");
+        else if (cmd.includes("study") || cmd.includes("summar")) navigate("study");
+        else if (cmd.includes("nav") || cmd.includes("gps")) navigate("navigation");
+        else if (cmd.includes("health") || cmd.includes("medicine")) navigate("health");
+        else if (cmd.includes("home")) navigate("home");
+        else speakText("Command not recognized: " + cmd);
+      };
+      rec.start();
+    }
+
+    function handleOCRFileUpload(event) {
+      if (event.target.files && event.target.files[0]) {
+        speakText("File " + event.target.files[0].name + " imported successfully.");
+      }
+    }
+
+    function executeOCRSimulation() {
+      const text = document.getElementById('ocrResultText').value;
+      speakText("OCR processing complete. Extracted text: " + text);
+    }
+
+    function describeSceneSimulation() {
+      const desc = "Scene Analysis: An organized accessible workstation equipped with a braille display, laptop showing software development suite, and digital reader.";
+      speakText(desc);
+      announce(desc);
+    }
+
+    function copyToClipboard(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.select();
+        navigator.clipboard.writeText(el.value);
+        speakText("Text copied to clipboard.");
+      }
+    }
+
+    function playDocumentSpeech() {
+      const doc = document.getElementById('readingDocumentText').value;
+      speakText(doc);
+    }
+
+    function runCode() {
+      const out = "Execution Finished:\nWelcome to Blind Tech Foundation Accessible Code Studio!\n[Process exited with status 0]";
+      const term = document.getElementById('terminalOutput');
+      term.textContent = out;
+      speakText("Code executed successfully: Welcome to Blind Tech Foundation Accessible Code Studio!");
+      term.focus();
+    }
+
+    function handleAccountInput(input) {
+      input.value = input.value.replace(/[^0-9]/g, '');
+      if (input.value.length > 0) {
+        const lastDigit = input.value[input.value.length - 1];
+        if (synth) synth.cancel();
+        const u = new SpeechSynthesisUtterance("Digit " + lastDigit);
+        u.lang = 'en-IN';
+        synth.speak(u);
+      }
+    }
+
+    function numberToWordsINR(amount) {
+      if (!amount || isNaN(amount) || amount <= 0) return "";
+      const units = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+      const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+      function conv(n) {
+        if (n < 20) return units[n];
+        if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? " " + units[n % 10] : "");
+        return units[Math.floor(n / 100)] + " Hundred" + (n % 100 ? " " + conv(n % 100) : "");
+      }
+      let n = Math.floor(amount);
+      let cr = Math.floor(n / 10000000); n %= 10000000;
+      let lk = Math.floor(n / 100000); n %= 100000;
+      let th = Math.floor(n / 1000); n %= 1000;
+      let rem = n;
+      let res = "";
+      if (cr) res += conv(cr) + " Crore ";
+      if (lk) res += conv(lk) + " Lakh ";
+      if (th) res += conv(th) + " Thousand ";
+      if (rem) res += conv(rem);
+      return res.trim() + " Rupees Only";
+    }
+
+    function handleAmountInput(val) {
+      const words = numberToWordsINR(val);
+      document.getElementById('wordsOut').textContent = words;
+    }
+
+    function submitBankingForm() {
+      const name = document.getElementById('bName').value.trim();
+      const acc = document.getElementById('bAccount').value.trim();
+      const type = document.getElementById('bType').value;
+      const amt = document.getElementById('bAmount').value.trim();
+      const words = document.getElementById('wordsOut').textContent;
+
+      if (!name || acc.length < 6 || !amt) {
+        speakText("Please complete all banking form fields properly.");
+        return;
+      }
+      const summary = `Confirming ${type}. Beneficiary: ${name}. Account ending with ${acc.slice(-4)}. Amount: ${amt} Rupees. ${words}`;
+      speakText(summary);
+      const receipt = `TRANSACTION RECEIPT\nType: ${type}\nBeneficiary: ${name}\nAccount: ${acc}\nAmount: ₹${amt}\nIn Words: ${words}\nStatus: SUCCESSFUL`;
+      const receiptEl = document.getElementById('bankReceipt');
+      receiptEl.style.display = 'block';
+      receiptEl.textContent = receipt;
+      receiptEl.focus();
+    }
+
+    function switchFinTab(tab) {
+      document.getElementById('fin-emi').style.display = (tab === 'emi') ? 'block' : 'none';
+      document.getElementById('fin-sip').style.display = (tab === 'sip') ? 'block' : 'none';
+      document.getElementById('fin-exp').style.display = (tab === 'exp') ? 'block' : 'none';
+      announce("Switched to " + tab.toUpperCase() + " tab.");
+    }
+
+    function calcEMI() {
+      const p = parseFloat(document.getElementById('emiP').value);
+      const r = (parseFloat(document.getElementById('emiR').value) / 100) / 12;
+      const n = parseFloat(document.getElementById('emiN').value) * 12;
+      if (p > 0 && r > 0 && n > 0) {
+        const emi = Math.round((p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1));
+        const total = emi * n;
+        const interest = total - p;
+        const text = `Monthly EMI: ₹${emi}\nTotal Interest: ₹${interest}\nTotal Payable: ₹${total}`;
+        const box = document.getElementById('emiResult');
+        box.style.display = 'block';
+        box.textContent = text;
+        speakText(`Calculated EMI: ${emi} Rupees per month. Total interest: ${interest} Rupees.`);
+        box.focus();
+      }
+    }
+
+    function calcSIP() {
+      const p = parseFloat(document.getElementById('sipP').value);
+      const r = (parseFloat(document.getElementById('sipR').value) / 100) / 12;
+      const n = parseFloat(document.getElementById('sipN').value) * 12;
+      if (p > 0 && r > 0 && n > 0) {
+        const maturity = Math.round(p * (((Math.pow(1 + r, n) - 1) / r) * (1 + r)));
+        const invested = p * n;
+        const gain = maturity - invested;
+        const text = `Total Invested: ₹${invested}\nEstimated Gain: ₹${gain}\nMaturity Value: ₹${maturity}`;
+        const box = document.getElementById('sipResult');
+        box.style.display = 'block';
+        box.textContent = text;
+        speakText(`Maturity amount: ${maturity} Rupees. Total capital invested: ${invested} Rupees.`);
+        box.focus();
+      }
+    }
+
+    let totalExpense = 0;
+    function addExpense() {
+      const desc = document.getElementById('expDesc').value.trim();
+      const amt = parseFloat(document.getElementById('expAmt').value);
+      if (desc && amt > 0) {
+        totalExpense += amt;
+        const list = document.getElementById('expList');
+        const item = document.createElement('li');
+        item.style.padding = "6px 0";
+        item.style.borderBottom = "1px solid var(--border)";
+        item.textContent = `${desc}: ₹${amt}`;
+        list.prepend(item);
+        document.getElementById('expTotal').textContent = "Total Spending: ₹" + totalExpense;
+        speakText(`Added ${desc} for ${amt} Rupees. Total spending is now ${totalExpense} Rupees.`);
+        document.getElementById('expDesc').value = '';
+        document.getElementById('expAmt').value = '';
+      }
+    }
+
+    function generateExamQA() {
+      const topic = document.getElementById('examTopic').value.trim();
+      if (!topic) {
+        speakText("Please enter an exam topic prompt.");
+        return;
+      }
+      const out = `Topic: ${topic}\n\nQ1: What is the constitutional and practical significance of ${topic} in India?\nAnswer: In Indian administrative governance, it establishes equal protection under the law, substantive fundamental rights, and non-discrimination enforceable through the Supreme Court and High Courts under Article 32 and 226.`;
+      const box = document.getElementById('examQAOut');
+      box.style.display = 'block';
+      box.textContent = out;
+      speakText(`Generated question for ${topic}: What is the constitutional significance in India?`);
+      box.focus();
+    }
+
+    function summarizeStudyNotes() {
+      const summary = "Summary Takeaways:\n1. RBI manages monetary policy and currency supply.\n2. Key regulatory tools: Repo Rate, Reverse Repo, and CRR.\n3. Primary mandate: Maintaining price stability while sustaining economic growth.";
+      const box = document.getElementById('studySummaryOut');
+      box.style.display = 'block';
+      box.textContent = summary;
+      speakText("Summary generated: RBI regulates monetary policy through repo rates to balance inflation and growth.");
+      box.focus();
+    }
+
+    function speakLocation() {
+      speakText("Current GPS location: Bengaluru, Karnataka, India. State Bank Braille ATM is 250 meters straight ahead.");
+    }
+
+    function computeMath() {
+      const expr = document.getElementById('calcInput').value.trim();
+      try {
+        const sanitized = expr.replace(/[^0-9+\-*/().]/g, '');
+        const res = Function('"use strict"; return (' + sanitized + ')')();
+        const out = `${expr} = ${res}`;
+        const box = document.getElementById('calcOut');
+        box.style.display = 'block';
+        box.textContent = out;
+        speakText(`Result is ${res}`);
+        box.focus();
+      } catch (e) {
+        speakText("Invalid math calculation expression.");
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.altKey) {
+        switch (e.key.toLowerCase()) {
+          case 'h': navigate('home'); break;
+          case 'p': executeOCRSimulation(); break;
+          case 'r': playDocumentSpeech(); break;
+          case 'e': runCode(); break;
+          case 's': submitBankingForm(); break;
+          case 'c': calcEMI(); break;
+          case 'a': addExpense(); break;
+          case 'g': generateExamQA(); break;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
