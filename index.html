@@ -1,1068 +1,478 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="high-contrast">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
-  <title>Blind Tech Foundation</title>
-  <style>
-    :root {
-      --bg: #000000;
-      --surface: #121212;
-      --surface-variant: #1e1e1e;
-      --card: #181818;
-      --text: #ffffff;
-      --text-muted: #e0e0e0;
-      --primary: #ffd700;
-      --primary-text: #000000;
-      --secondary: #00ffff;
-      --border: #ffd700;
-      --focus-ring: #00ffff;
-      --error: #ff4d4d;
-      --success: #00ff66;
-    }
-    [data-theme="dark"] {
-      --bg: #121212;
-      --surface: #1e1e1e;
-      --surface-variant: #282828;
-      --card: #242424;
-      --text: #f0f0f0;
-      --text-muted: #b0b0b0;
-      --primary: #ffd700;
-      --primary-text: #121212;
-      --secondary: #80d8ff;
-      --border: #555555;
-      --focus-ring: #ffd700;
-      --error: #cf6679;
-      --success: #03dac6;
-    }
-    [data-theme="light"] {
-      --bg: #f8f9fa;
-      --surface: #ffffff;
-      --surface-variant: #f1f3f4;
-      --card: #ffffff;
-      --text: #121212;
-      --text-muted: #444444;
-      --primary: #b27b00;
-      --primary-text: #ffffff;
-      --secondary: #006699;
-      --border: #767676;
-      --focus-ring: #0056b3;
-      --error: #b00020;
-      --success: #007a33;
-    }
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    body {
-      background-color: var(--bg);
-      color: var(--text);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      line-height: 1.6;
-      font-size: 18px;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-    *:focus-visible {
-      outline: 4px solid var(--focus-ring) !important;
-      outline-offset: 3px !important;
-    }
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-    #screenCurtain {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: #000000;
-      z-index: 99999;
-    }
-    header.app-bar {
-      background: var(--surface);
-      border-bottom: 2px solid var(--border);
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      gap: 12px;
-    }
-    .app-title {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--primary);
-    }
-    .header-actions {
-      display: flex;
-      gap: 8px;
-    }
-    .icon-btn {
-      min-width: 48px;
-      min-height: 48px;
-      background: var(--surface-variant);
-      color: var(--text);
-      border: 2px solid var(--border);
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: bold;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 6px 12px;
-    }
-    .icon-btn:hover {
-      background: var(--primary);
-      color: var(--primary-text);
-    }
-    #sideDrawer {
-      position: fixed;
-      top: 0;
-      left: -320px;
-      width: 300px;
-      height: 100vh;
-      background: var(--surface);
-      border-right: 3px solid var(--border);
-      z-index: 10000;
-      transition: left 0.25s ease-in-out;
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-      padding: 16px;
-    }
-    #sideDrawer.open {
-      left: 0;
-    }
-    .drawer-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.7);
-      z-index: 9999;
-    }
-    .drawer-overlay.active {
-      display: block;
-    }
-    .drawer-nav {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 16px;
-    }
-    .drawer-link {
-      min-height: 48px;
-      background: var(--surface-variant);
-      color: var(--text);
-      border: 2px solid var(--border);
-      padding: 10px 14px;
-      text-align: left;
-      font-size: 1rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    .drawer-link:hover {
-      background: var(--primary);
-      color: var(--primary-text);
-    }
-    main {
-      flex: 1;
-      padding: 16px;
-      padding-bottom: 96px;
-      max-width: 900px;
-      margin: 0 auto;
-      width: 100%;
-    }
-    .view-panel {
-      display: none;
-    }
-    .view-panel.active {
-      display: block;
-    }
-    h1, h2, h3 {
-      color: var(--primary);
-      margin-bottom: 12px;
-    }
-    .card {
-      background: var(--card);
-      border: 2px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 14px;
-    }
-    .action-card {
-      cursor: pointer;
-      display: block;
-      width: 100%;
-      text-align: left;
-      min-height: 64px;
-    }
-    .action-card:hover {
-      background: var(--surface-variant);
-      border-color: var(--secondary);
-    }
-    .btn {
-      min-height: 48px;
-      min-width: 48px;
-      padding: 12px 20px;
-      font-size: 1rem;
-      font-weight: bold;
-      border-radius: 8px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      border: 2px solid var(--border);
-      background: var(--primary);
-      color: var(--primary-text);
-      margin: 4px 0;
-    }
-    .btn-secondary {
-      background: var(--surface-variant);
-      color: var(--text);
-    }
-    .form-group {
-      margin-bottom: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    label {
-      font-weight: 600;
-      color: var(--text);
-    }
-    input, select, textarea {
-      min-height: 48px;
-      padding: 10px 12px;
-      font-size: 1.05rem;
-      border: 2px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      border-radius: 6px;
-      width: 100%;
-      font-family: inherit;
-    }
-    .tabs-bar {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-      overflow-x: auto;
-    }
-    .tab-btn {
-      flex: 1;
-      min-height: 48px;
-      padding: 8px 12px;
-      border: 2px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-    .tab-btn.active {
-      background: var(--primary);
-      color: var(--primary-text);
-    }
-    .output-box {
-      background: var(--surface-variant);
-      border: 2px solid var(--border);
-      padding: 14px;
-      border-radius: 6px;
-      margin-top: 12px;
-      white-space: pre-wrap;
-      font-family: monospace;
-      font-size: 1rem;
-    }
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100vw;
-      background: var(--surface);
-      border-top: 3px solid var(--border);
-      display: flex;
-      justify-content: space-around;
-      padding: 6px 4px;
-      z-index: 1000;
-    }
-    .nav-btn {
-      flex: 1;
-      min-height: 52px;
-      background: transparent;
-      border: none;
-      color: var(--text);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.85rem;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 6px;
-      gap: 2px;
-    }
-    .nav-btn.active {
-      background: var(--surface-variant);
-      color: var(--primary);
-      border: 2px solid var(--border);
-    }
-    .fab-voice {
-      position: fixed;
-      bottom: 74px;
-      right: 18px;
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background: var(--primary);
-      color: var(--primary-text);
-      border: 3px solid #000;
-      font-size: 1.6rem;
-      font-weight: bold;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1001;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hill Climb Racing</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            background: #111;
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+        #gameCanvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #fff;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px #000;
+            pointer-events: none;
+        }
+        .bar-container {
+            width: 200px;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #fff;
+            border-radius: 10px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        #fuelBar {
+            width: 100%;
+            height: 100%;
+            background: #e74c3c;
+            transition: width 0.1s linear;
+        }
+        #controls {
+            position: absolute;
+            bottom: 30px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 40px;
+            pointer-events: none;
+        }
+        .btn {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            touch-action: manipulation;
+        }
+        .btn:active {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        #gameOverScreen {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            padding: 30px 50px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid #fff;
+        }
+        #gameOverScreen h1 {
+            margin-bottom: 15px;
+            color: #e74c3c;
+        }
+        #restartBtn {
+            margin-top: 20px;
+            padding: 10px 25px;
+            font-size: 18px;
+            font-weight: bold;
+            background: #2ecc71;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-  <div id="screenCurtain" aria-hidden="true"></div>
-  <div id="liveAnnouncer" class="sr-only" aria-live="assertive"></div>
-  <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer(false)"></div>
 
-  <div id="sideDrawer" role="dialog" aria-label="Main Navigation Drawer">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="font-size: 1.3rem;">All Tools & Hubs</h2>
-      <button class="icon-btn" onclick="toggleDrawer(false)" aria-label="Close navigation menu">✕</button>
+<div id="ui">
+    <div>Distance: <span id="distVal">0</span> m</div>
+    <div>Coins: <span id="coinVal">0</span></div>
+    <div class="bar-container">
+        <div id="fuelBar"></div>
     </div>
-    <nav class="drawer-nav">
-      <button class="drawer-link" onclick="navigate('home')">1. Home Dashboard</button>
-      <button class="drawer-link" onclick="navigate('ocr')">2. Advanced OCR Hub</button>
-      <button class="drawer-link" onclick="navigate('reading')">3. Universal Reading Hub</button>
-      <button class="drawer-link" onclick="navigate('ide')">4. Accessible Code IDE</button>
-      <button class="drawer-link" onclick="navigate('banking')">5. Banking Tools</button>
-      <button class="drawer-link" onclick="navigate('finance')">6. Finance & Money Tools</button>
-      <button class="drawer-link" onclick="navigate('education')">7. Education & Exam Hub</button>
-      <button class="drawer-link" onclick="navigate('study')">8. Study Tools & Summarizer</button>
-      <button class="drawer-link" onclick="navigate('navigation')">9. Navigation Assistant</button>
-      <button class="drawer-link" onclick="navigate('health')">10. Health & Wellness</button>
-      <button class="drawer-link" onclick="navigate('daily')">11. Daily Tasks & Calculator</button>
-      <button class="drawer-link" onclick="navigate('agriculture')">12. Agriculture Assistant</button>
-      <button class="drawer-link" onclick="navigate('legal')">13. Legal & RPwD Schemes</button>
-      <button class="drawer-link" onclick="navigate('media')">14. Media Tools</button>
-      <button class="drawer-link" onclick="navigate('articles')">15. Articles & Tutorials</button>
-      <button class="drawer-link" onclick="navigate('news')">16. Daily News Feed</button>
-      <button class="drawer-link" onclick="navigate('vault')">17. Smart Software Vault</button>
-      <button class="drawer-link" onclick="navigate('community')">18. Community & Support</button>
-    </nav>
-  </div>
+</div>
 
-  <header class="app-bar">
-    <div style="display:flex; align-items:center; gap:8px;">
-      <button class="icon-btn" onclick="toggleDrawer(true)" aria-label="Open Navigation Drawer Menu">☰</button>
-      <span class="app-title">Blind Tech Suite</span>
-    </div>
-    <div class="header-actions">
-      <button class="icon-btn" onclick="cycleTheme()" aria-label="Switch Theme Mode (High Contrast, Dark, Light)">🎨</button>
-      <button class="icon-btn" onclick="toggleScreenCurtain()" aria-label="Toggle Screen Curtain privacy mode">🕶️</button>
-      <button class="icon-btn" onclick="stopAllSpeech()" aria-label="Silence all speech playback">⏹️</button>
-    </div>
-  </header>
+<div id="controls">
+    <div class="btn" id="brakeBtn">BRAKE</div>
+    <div class="btn" id="gasBtn">GAS</div>
+</div>
 
-  <main>
-    <section id="view-home" class="view-panel active" aria-labelledby="h-home">
-      <h1 id="h-home">Home Dashboard</h1>
-      <div class="card" role="region" aria-label="Important Foundation Updates">
-        <h2 style="font-size:1.15rem;">Foundation Announcement</h2>
-        <p>Welcome to Blind Tech Foundation Mobile Suite. High-contrast WCAG 2.1 AAA mode, Google TalkBack accessibility, and keyboard shortcuts active.</p>
-        <button class="btn btn-secondary" onclick="speakText('Welcome to Blind Tech Foundation Mobile Suite. Google TalkBack accessibility and shortcuts are active.')">Listen Announcement</button>
-      </div>
+<div id="gameOverScreen">
+    <h1 id="failReason">GAME OVER</h1>
+    <p>Distance Reached: <span id="finalDist">0</span> m</p>
+    <p>Coins Collected: <span id="finalCoins">0</span></p>
+    <button id="restartBtn" onclick="restartGame()">RESTART</button>
+</div>
 
-      <h2>Quick Access Tools</h2>
-      <button class="card action-card" onclick="navigate('ocr')">
-        <h3>📷 Advanced OCR & Scene Hub</h3>
-        <p>Extract text from images, camera photos, or listen to AI scene descriptions.</p>
-      </button>
-      <button class="card action-card" onclick="navigate('reading')">
-        <h3>📖 Universal AI Reading Hub</h3>
-        <p>Document reader for TXT, PDF, and Markdown with audio playback controls.</p>
-      </button>
-      <button class="card action-card" onclick="navigate('banking')">
-        <h3>🏦 Banking Form Assistant</h3>
-        <p>Voice-prompted form with digit-by-digit verification and INR words readout.</p>
-      </button>
-      <button class="card action-card" onclick="navigate('ide')">
-        <h3>💻 Accessible Code IDE</h3>
-        <p>Code editor with audio-announced terminal output for Python, HTML, and JS.</p>
-      </button>
-      <button class="card action-card" onclick="triggerSOS()">
-        <h3 style="color:var(--error);">🚨 Emergency SOS (112)</h3>
-        <p>Immediate shortcut to call national emergency services or ambulance.</p>
-      </button>
-    </section>
+<canvas id="gameCanvas"></canvas>
 
-    <section id="view-ocr" class="view-panel" aria-labelledby="h-ocr">
-      <h1 id="h-ocr">Advanced OCR Hub</h1>
-      <div class="card">
-        <div class="form-group">
-          <label for="ocrFileInput">Select or Capture Image / Document</label>
-          <input type="file" id="ocrFileInput" accept="image/*,application/pdf" onchange="handleOCRFileUpload(event)" />
-        </div>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button class="btn" onclick="executeOCRSimulation()">Process OCR (Alt+P)</button>
-          <button class="btn btn-secondary" onclick="describeSceneSimulation()">Describe Image Scene</button>
-        </div>
-      </div>
-      <div class="card">
-        <label for="ocrResultText">Extracted Editable Text</label>
-        <textarea id="ocrResultText" rows="6">Blind Tech Foundation: Empowering individuals with accessible, open-source technology.</textarea>
-        <div style="display:flex; gap:8px; margin-top:8px;">
-          <button class="btn" onclick="speakText(document.getElementById('ocrResultText').value)">Read Aloud</button>
-          <button class="btn btn-secondary" onclick="copyToClipboard('ocrResultText')">Copy Text</button>
-        </div>
-      </div>
-    </section>
+<script>
+const { Engine, World, Bodies, Body, Constraint, Composite } = Matter;
 
-    <section id="view-reading" class="view-panel" aria-labelledby="h-reading">
-      <h1 id="h-reading">Universal Reading Hub</h1>
-      <div class="card">
-        <div class="form-group">
-          <label for="readerSpeed">Reading Speed: <span id="speedLabel">1.0x</span></label>
-          <input type="range" id="readerSpeed" min="0.5" max="2.5" step="0.25" value="1.0" oninput="updateSpeechRate(this.value)" />
-        </div>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button class="btn" onclick="playDocumentSpeech()">Play Aloud (Alt+R)</button>
-          <button class="btn btn-secondary" onclick="stopAllSpeech()">Stop Audio</button>
-        </div>
-      </div>
-      <div class="card">
-        <label for="readingDocumentText">Document Content</label>
-        <textarea id="readingDocumentText" rows="8">The Rights of Persons with Disabilities (RPwD) Act, 2016 guarantees equal opportunities, accessibility across public digital infrastructure, and affirmative reservations in education and government employment throughout India.</textarea>
-      </div>
-    </section>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
 
-    <section id="view-ide" class="view-panel" aria-labelledby="h-ide">
-      <h1 id="h-ide">Accessible Code IDE</h1>
-      <div class="card">
-        <label for="codeEditor">Source Code (Python / JavaScript / C++)</label>
-        <textarea id="codeEditor" rows="7" style="font-family:monospace;">def welcome():
-    print("Welcome to Blind Tech Foundation Accessible Code Studio!")
+let width = window.innerWidth;
+let height = window.innerHeight;
+canvas.width = width;
+canvas.height = height;
 
-welcome()</textarea>
-        <div style="display:flex; gap:8px; margin-top:8px;">
-          <button class="btn" onclick="runCode()">Run Code (Alt+E)</button>
-          <button class="btn btn-secondary" onclick="document.getElementById('codeEditor').value=''; speakText('Code cleared.')">Clear</button>
-        </div>
-      </div>
-      <div class="card">
-        <h2>Terminal Audio Output</h2>
-        <div id="terminalOutput" class="output-box" tabindex="0">Terminal ready. Press "Run Code" to execute.</div>
-      </div>
-    </section>
+window.addEventListener("resize", () => {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+});
 
-    <section id="view-banking" class="view-panel" aria-labelledby="h-banking">
-      <h1 id="h-banking">Accessible Banking Form</h1>
-      <div class="card">
-        <div class="form-group">
-          <label for="bName">Beneficiary Full Name</label>
-          <input type="text" id="bName" placeholder="Enter Full Name" />
-        </div>
-        <div class="form-group">
-          <label for="bAccount">Account Number (Digits Only)</label>
-          <input type="text" id="bAccount" inputmode="numeric" oninput="handleAccountInput(this)" placeholder="e.g. 1029384756" />
-        </div>
-        <div class="form-group">
-          <label for="bType">Transaction Type</label>
-          <select id="bType">
-            <option value="Deposit">Deposit</option>
-            <option value="Withdrawal">Withdrawal</option>
-            <option value="Transfer">Transfer</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="bAmount">Amount in ₹ (INR)</label>
-          <input type="number" id="bAmount" oninput="handleAmountInput(this.value)" placeholder="e.g. 5000" />
-          <div id="wordsOut" style="color:var(--primary); font-weight:bold; margin-top:4px;" aria-live="polite"></div>
-        </div>
-        <button class="btn" onclick="submitBankingForm()">Submit & Announce Summary (Alt+S)</button>
-      </div>
-      <div id="bankReceipt" class="card output-box" style="display:none;" tabindex="0"></div>
-    </section>
+let engine, world;
+let chassis, wheelBack, wheelFront, driverHead;
+let terrainSegments = [];
+let coins = [];
+let fuelCans = [];
 
-    <section id="view-finance" class="view-panel" aria-labelledby="h-finance">
-      <h1 id="h-finance">Finance & Money Tools</h1>
-      <div class="tabs-bar" role="tablist">
-        <button class="tab-btn active" role="tab" onclick="switchFinTab('emi')">EMI Calculator</button>
-        <button class="tab-btn" role="tab" onclick="switchFinTab('sip')">SIP Planner</button>
-        <button class="tab-btn" role="tab" onclick="switchFinTab('exp')">Expense Tracker</button>
-      </div>
+let keys = { gas: false, brake: false };
+let fuel = 100;
+let coinCount = 0;
+let maxDistance = 0;
+let isGameOver = false;
 
-      <div id="fin-emi" class="card">
-        <h2>EMI Calculator</h2>
-        <div class="form-group">
-          <label for="emiP">Principal Loan Amount (₹)</label>
-          <input type="number" id="emiP" value="500000" />
-        </div>
-        <div class="form-group">
-          <label for="emiR">Annual Interest Rate (%)</label>
-          <input type="number" step="0.1" id="emiR" value="8.5" />
-        </div>
-        <div class="form-group">
-          <label for="emiN">Tenure (Years)</label>
-          <input type="number" id="emiN" value="5" />
-        </div>
-        <button class="btn" onclick="calcEMI()">Calculate EMI (Alt+C)</button>
-        <div id="emiResult" class="output-box" style="display:none;" tabindex="0"></div>
-      </div>
+let nextTerrainX = 0;
+let nextTerrainY = 400;
 
-      <div id="fin-sip" class="card" style="display:none;">
-        <h2>SIP Investment Planner</h2>
-        <div class="form-group">
-          <label for="sipP">Monthly Investment (₹)</label>
-          <input type="number" id="sipP" value="5000" />
-        </div>
-        <div class="form-group">
-          <label for="sipR">Expected Annual Return (%)</label>
-          <input type="number" step="0.5" id="sipR" value="12" />
-        </div>
-        <div class="form-group">
-          <label for="sipN">Investment Period (Years)</label>
-          <input type="number" id="sipN" value="10" />
-        </div>
-        <button class="btn" onclick="calcSIP()">Calculate SIP Maturity</button>
-        <div id="sipResult" class="output-box" style="display:none;" tabindex="0"></div>
-      </div>
+function initGame() {
+    engine = Engine.create();
+    world = engine.world;
+    world.gravity.y = 1.3;
 
-      <div id="fin-exp" class="card" style="display:none;">
-        <h2>Expense Tracker</h2>
-        <div class="form-group">
-          <label for="expDesc">Item Description</label>
-          <input type="text" id="expDesc" placeholder="e.g., Braille Notebook" />
-        </div>
-        <div class="form-group">
-          <label for="expAmt">Amount (₹)</label>
-          <input type="number" id="expAmt" placeholder="e.g., 250" />
-        </div>
-        <button class="btn" onclick="addExpense()">Add Expense (Alt+A)</button>
-        <h3 id="expTotal" style="margin-top:14px;">Total Spending: ₹0</h3>
-        <ul id="expList" style="list-style:none; margin-top:8px;"></ul>
-      </div>
-    </section>
+    terrainSegments = [];
+    coins = [];
+    fuelCans = [];
+    fuel = 100;
+    coinCount = 0;
+    maxDistance = 0;
+    isGameOver = false;
+    document.getElementById("gameOverScreen").style.display = "none";
 
-    <section id="view-education" class="view-panel" aria-labelledby="h-education">
-      <h1 id="h-education">Competitive Exam & Q&A Hub</h1>
-      <div class="card">
-        <p>Tailored for UPSC CSE, UGC NET, SSC, and Banking Examinations.</p>
-        <div class="form-group">
-          <label for="examTopic">Enter Subject or Topic Prompt</label>
-          <input type="text" id="examTopic" placeholder="e.g. Fundamental Rights in Indian Constitution" />
-        </div>
-        <button class="btn" onclick="generateExamQA()">Generate AI Q&A (Alt+G)</button>
-        <div id="examQAOut" class="output-box" style="display:none;" tabindex="0"></div>
-      </div>
-    </section>
+    nextTerrainX = -500;
+    nextTerrainY = height * 0.65;
 
-    <section id="view-study" class="view-panel" aria-labelledby="h-study">
-      <h1 id="h-study">Study Tools & Summarizer</h1>
-      <div class="card">
-        <label for="studyNotes">Study Notes / Book Excerpt</label>
-        <textarea id="studyNotes" rows="6">The Reserve Bank of India is the central bank of India which controls the issue and supply of the Indian rupee. It regulates banking operations, maintains financial stability, and manages inflation through policy repo rates.</textarea>
-        <div style="display:flex; gap:8px; margin-top:8px;">
-          <button class="btn" onclick="summarizeStudyNotes()">Summarize Notes</button>
-          <button class="btn btn-secondary" onclick="speakText(document.getElementById('studyNotes').value)">Read Full Notes</button>
-        </div>
-        <div id="studySummaryOut" class="output-box" style="display:none;" tabindex="0"></div>
-      </div>
-    </section>
-
-    <section id="view-navigation" class="view-panel" aria-labelledby="h-nav">
-      <h1 id="h-nav">Navigation Assistant & Radar</h1>
-      <div class="card">
-        <button class="btn" onclick="speakLocation()">Announce GPS Location & Landmarks</button>
-        <div class="output-box" tabindex="0">
-📍 Current Coordinates: Bengaluru, Karnataka, India (Accuracy: 4 meters)
-🚶 State Bank Braille ATM: 250 meters Straight Ahead
-🚇 Metro Station Accessible Elevator: 420 meters North
-🔊 Audible Traffic Intersection: 110 meters ahead
-        </div>
-      </div>
-    </section>
-
-    <section id="view-health" class="view-panel" aria-labelledby="h-health">
-      <h1 id="h-health">Health & Medication Scheduler</h1>
-      <div class="card">
-        <button class="btn" onclick="speakText('Medication schedule: Morning 8 AM, BP Tablet. Afternoon 1:30 PM, Eye drops. Night 9 PM, Calcium supplement.')">Read Today's Schedule</button>
-        <div class="output-box" tabindex="0">
-💊 08:00 AM: BP & Multivitamin (1 Tablet after breakfast)
-💧 01:30 PM: Eye Drops (2 Drops both eyes)
-💊 09:00 PM: Calcium Supplement (1 Tablet after dinner)
-📞 Emergency SOS: 112 / Family Contact
-        </div>
-      </div>
-    </section>
-
-    <section id="view-daily" class="view-panel" aria-labelledby="h-daily">
-      <h1 id="h-daily">Daily Tasks & Accessible Calculator</h1>
-      <div class="card">
-        <h2>Audio Calculator</h2>
-        <div class="form-group">
-          <label for="calcInput">Calculation Expression</label>
-          <input type="text" id="calcInput" placeholder="e.g. 4500 * 12 or 500 + 350" />
-        </div>
-        <button class="btn" onclick="computeMath()">Calculate & Speak</button>
-        <div id="calcOut" class="output-box" style="display:none;" tabindex="0"></div>
-      </div>
-    </section>
-
-    <section id="view-agriculture" class="view-panel" aria-labelledby="h-agri">
-      <h1 id="h-agri">Agriculture & Mandi Rates</h1>
-      <div class="card">
-        <button class="btn" onclick="speakText('Mandi Rates: Wheat is 2,275 Rupees per quintal. Paddy Grade A is 2,183 Rupees per quintal.')">Announce Mandi Rates</button>
-        <div class="output-box" tabindex="0">
-🌾 Wheat: ₹2,275 / Quintal (State Mandi)
-🌾 Paddy (Grade A): ₹2,183 / Quintal
-🌱 Crop Protection: Organic Neem oil spray recommended for pest mitigation
-📢 PM-KISAN: 16th Installment DBT verification active
-        </div>
-      </div>
-    </section>
-
-    <section id="view-legal" class="view-panel" aria-labelledby="h-legal">
-      <h1 id="h-legal">Disability Rights & Legal Schemes</h1>
-      <div class="card">
-        <div class="output-box" tabindex="0">
-⚖️ RPwD Act 2016: 4% reservation in government vacancies, free education up to 18 years.
-💳 UDID Card: Single verified disability identification for welfare benefits.
-🛠️ ADIP Scheme: Free distribution of assistive aids, accessible laptops, and braille equipment.
-💰 National Disability Pension: State-categorized monthly social security.
-        </div>
-        <button class="btn" onclick="speakText('The Rights of Persons with Disabilities Act guarantees 4 percent reservations in jobs, free education, and free assistive equipment under the ADIP scheme.')">Listen Summary</button>
-      </div>
-    </section>
-
-    <section id="view-media" class="view-panel" aria-labelledby="h-media">
-      <h1 id="h-media">Accessible Media Tools</h1>
-      <div class="card">
-        <button class="btn" onclick="speakText('Audio trimmer tool initialized. Ready for recording upload.')">Audio Track Trimmer</button>
-        <button class="btn btn-secondary" onclick="speakText('Speech normalizer ready. Level set to 90 decibels.')">Volume Normalizer</button>
-        <button class="btn btn-secondary" onclick="speakText('Subtitle to speech narrator active.')">Video Audio Describer</button>
-      </div>
-    </section>
-
-    <section id="view-articles" class="view-panel" aria-labelledby="h-art">
-      <h1 id="h-art">Tutorials & Knowledge Hub</h1>
-      <div class="card">
-        <h3>Mastering TalkBack & NVDA</h3>
-        <p>Comprehensive guide to multi-finger gestures, reading controls, and external Bluetooth keyboard shortcuts.</p>
-        <button class="btn" onclick="speakText('Article: Mastering TalkBack and NVDA. Learn navigation gestures, reading granularity, and hardware shortcut combinations.')">Read Article</button>
-      </div>
-    </section>
-
-    <section id="view-news" class="view-panel" aria-labelledby="h-news">
-      <h1 id="h-news">Daily Accessibility News Feed</h1>
-      <div class="card">
-        <h3>National Digital Accessibility Mandate</h3>
-        <p>All higher educational portals and exam platforms required to meet WCAG 2.1 AAA accessibility standards.</p>
-        <button class="btn" onclick="speakText('News: Government mandates complete digital accessibility for all higher educational examination portals across the country.')">Listen News</button>
-      </div>
-    </section>
-
-    <section id="view-vault" class="view-panel" aria-labelledby="h-vault">
-      <h1 id="h-vault">Smart Software Vault</h1>
-      <div class="card">
-        <h3>Curated Assistive Software</h3>
-        <p>• NVDA Screen Reader 2026<br>• TalkBack Custom Bluetooth Keymap<br>• Kokoro-82 Neural TTS Engine<br>• Accessible Audio Graph Plotter</p>
-        <button class="btn" onclick="speakText('Software Vault: NVDA 2026, TalkBack Bluetooth keymaps, and Kokoro 82 neural voice models available.')">Listen Catalog</button>
-      </div>
-    </section>
-
-    <section id="view-community" class="view-panel" aria-labelledby="h-comm">
-      <h1 id="h-comm">Community & Scribe Support</h1>
-      <div class="card">
-        <button class="btn" onclick="speakText('Opening volunteer and scribe request registry.')">Find Exam Scribe</button>
-        <button class="btn btn-secondary" onclick="speakText('Submit audio ticket. Recording input ready.')">Voice Feedback & Bug Report</button>
-      </div>
-    </section>
-  </main>
-
-  <button class="fab-voice" onclick="toggleVoiceSearch()" aria-label="Voice Command Assistant. Tap to speak destinations or tools.">🎤</button>
-
-  <nav class="bottom-nav" aria-label="Bottom Navigation">
-    <button class="nav-btn active" id="bnav-home" onclick="navigate('home')">
-      <span aria-hidden="true">🏠</span><span>Home</span>
-    </button>
-    <button class="nav-btn" id="bnav-ocr" onclick="navigate('ocr')">
-      <span aria-hidden="true">📷</span><span>OCR</span>
-    </button>
-    <button class="nav-btn" id="bnav-reading" onclick="navigate('reading')">
-      <span aria-hidden="true">📖</span><span>Reader</span>
-    </button>
-    <button class="nav-btn" id="bnav-banking" onclick="navigate('banking')">
-      <span aria-hidden="true">🏦</span><span>Banking</span>
-    </button>
-    <button class="nav-btn" id="bnav-finance" onclick="navigate('finance')">
-      <span aria-hidden="true">💰</span><span>Finance</span>
-    </button>
-  </nav>
-
-  <script>
-    let speechRate = 1.0;
-    const synth = window.speechSynthesis;
-
-    function announce(text) {
-      const live = document.getElementById('liveAnnouncer');
-      if (live) {
-        live.textContent = '';
-        setTimeout(() => { live.textContent = text; }, 50);
-      }
+    for (let i = 0; i < 40; i++) {
+        generateTerrainChunk();
     }
 
-    function speakText(text) {
-      if (!synth) {
-        announce(text);
-        return;
-      }
-      synth.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = speechRate;
-      utterance.lang = 'en-IN';
-      synth.speak(utterance);
-      announce(text);
-    }
+    createCar(150, height * 0.4);
+}
 
-    function stopAllSpeech() {
-      if (synth) synth.cancel();
-      announce("Audio playback stopped.");
-    }
-
-    function updateSpeechRate(val) {
-      speechRate = parseFloat(val);
-      document.getElementById('speedLabel').textContent = speechRate.toFixed(2) + 'x';
-      announce("Reading speed set to " + speechRate + " times.");
-    }
-
-    function toggleDrawer(open) {
-      const drawer = document.getElementById('sideDrawer');
-      const overlay = document.getElementById('drawerOverlay');
-      if (open) {
-        drawer.classList.add('open');
-        overlay.classList.add('active');
-        announce("Navigation menu opened.");
-      } else {
-        drawer.classList.remove('open');
-        overlay.classList.remove('active');
-        announce("Navigation menu closed.");
-      }
-    }
-
-    function navigate(viewId) {
-      toggleDrawer(false);
-      document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
-      const target = document.getElementById('view-' + viewId);
-      if (target) {
-        target.classList.add('active');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        const heading = target.querySelector('h1, h2');
-        if (heading) {
-          heading.setAttribute('tabindex', '-1');
-          heading.focus();
-        }
-        announce("Opened " + viewId + " screen.");
-      }
-      document.querySelectorAll('.bottom-nav .nav-btn').forEach(btn => btn.classList.remove('active'));
-      const navBtn = document.getElementById('bnav-' + viewId);
-      if (navBtn) navBtn.classList.add('active');
-    }
-
-    const themes = ["high-contrast", "dark", "light"];
-    function cycleTheme() {
-      const html = document.documentElement;
-      let cur = html.getAttribute('data-theme') || "high-contrast";
-      let next = themes[(themes.indexOf(cur) + 1) % themes.length];
-      html.setAttribute('data-theme', next);
-      announce("Theme switched to " + next);
-      speakText("Theme " + next);
-    }
-
-    function toggleScreenCurtain() {
-      const curtain = document.getElementById('screenCurtain');
-      if (curtain.style.display === 'block') {
-        curtain.style.display = 'none';
-        speakText("Screen curtain deactivated. Display visible.");
-      } else {
-        curtain.style.display = 'block';
-        speakText("Screen curtain activated. Display is blacked out for privacy.");
-      }
-    }
-
-    function triggerSOS() {
-      speakText("Initiating emergency SOS call to 112.");
-      window.location.href = "tel:112";
-    }
-
-    function toggleVoiceSearch() {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        speakText("Voice recognition not supported by browser engine.");
-        return;
-      }
-      const rec = new SpeechRecognition();
-      rec.lang = 'en-IN';
-      rec.onstart = () => speakText("Listening for command...");
-      rec.onresult = (e) => {
-        const cmd = e.results[0][0].transcript.toLowerCase();
-        announce("Heard command: " + cmd);
-        if (cmd.includes("ocr") || cmd.includes("camera")) navigate("ocr");
-        else if (cmd.includes("read") || cmd.includes("book")) navigate("reading");
-        else if (cmd.includes("bank")) navigate("banking");
-        else if (cmd.includes("code") || cmd.includes("ide")) navigate("ide");
-        else if (cmd.includes("finance") || cmd.includes("money") || cmd.includes("emi")) navigate("finance");
-        else if (cmd.includes("exam") || cmd.includes("education")) navigate("education");
-        else if (cmd.includes("study") || cmd.includes("summar")) navigate("study");
-        else if (cmd.includes("nav") || cmd.includes("gps")) navigate("navigation");
-        else if (cmd.includes("health") || cmd.includes("medicine")) navigate("health");
-        else if (cmd.includes("home")) navigate("home");
-        else speakText("Command not recognized: " + cmd);
-      };
-      rec.start();
-    }
-
-    function handleOCRFileUpload(event) {
-      if (event.target.files && event.target.files[0]) {
-        speakText("File " + event.target.files[0].name + " imported successfully.");
-      }
-    }
-
-    function executeOCRSimulation() {
-      const text = document.getElementById('ocrResultText').value;
-      speakText("OCR processing complete. Extracted text: " + text);
-    }
-
-    function describeSceneSimulation() {
-      const desc = "Scene Analysis: An organized accessible workstation equipped with a braille display, laptop showing software development suite, and digital reader.";
-      speakText(desc);
-      announce(desc);
-    }
-
-    function copyToClipboard(id) {
-      const el = document.getElementById(id);
-      if (el) {
-        el.select();
-        navigator.clipboard.writeText(el.value);
-        speakText("Text copied to clipboard.");
-      }
-    }
-
-    function playDocumentSpeech() {
-      const doc = document.getElementById('readingDocumentText').value;
-      speakText(doc);
-    }
-
-    function runCode() {
-      const out = "Execution Finished:\nWelcome to Blind Tech Foundation Accessible Code Studio!\n[Process exited with status 0]";
-      const term = document.getElementById('terminalOutput');
-      term.textContent = out;
-      speakText("Code executed successfully: Welcome to Blind Tech Foundation Accessible Code Studio!");
-      term.focus();
-    }
-
-    function handleAccountInput(input) {
-      input.value = input.value.replace(/[^0-9]/g, '');
-      if (input.value.length > 0) {
-        const lastDigit = input.value[input.value.length - 1];
-        if (synth) synth.cancel();
-        const u = new SpeechSynthesisUtterance("Digit " + lastDigit);
-        u.lang = 'en-IN';
-        synth.speak(u);
-      }
-    }
-
-    function numberToWordsINR(amount) {
-      if (!amount || isNaN(amount) || amount <= 0) return "";
-      const units = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
-      const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
-      function conv(n) {
-        if (n < 20) return units[n];
-        if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? " " + units[n % 10] : "");
-        return units[Math.floor(n / 100)] + " Hundred" + (n % 100 ? " " + conv(n % 100) : "");
-      }
-      let n = Math.floor(amount);
-      let cr = Math.floor(n / 10000000); n %= 10000000;
-      let lk = Math.floor(n / 100000); n %= 100000;
-      let th = Math.floor(n / 1000); n %= 1000;
-      let rem = n;
-      let res = "";
-      if (cr) res += conv(cr) + " Crore ";
-      if (lk) res += conv(lk) + " Lakh ";
-      if (th) res += conv(th) + " Thousand ";
-      if (rem) res += conv(rem);
-      return res.trim() + " Rupees Only";
-    }
-
-    function handleAmountInput(val) {
-      const words = numberToWordsINR(val);
-      document.getElementById('wordsOut').textContent = words;
-    }
-
-    function submitBankingForm() {
-      const name = document.getElementById('bName').value.trim();
-      const acc = document.getElementById('bAccount').value.trim();
-      const type = document.getElementById('bType').value;
-      const amt = document.getElementById('bAmount').value.trim();
-      const words = document.getElementById('wordsOut').textContent;
-
-      if (!name || acc.length < 6 || !amt) {
-        speakText("Please complete all banking form fields properly.");
-        return;
-      }
-      const summary = `Confirming ${type}. Beneficiary: ${name}. Account ending with ${acc.slice(-4)}. Amount: ${amt} Rupees. ${words}`;
-      speakText(summary);
-      const receipt = `TRANSACTION RECEIPT\nType: ${type}\nBeneficiary: ${name}\nAccount: ${acc}\nAmount: ₹${amt}\nIn Words: ${words}\nStatus: SUCCESSFUL`;
-      const receiptEl = document.getElementById('bankReceipt');
-      receiptEl.style.display = 'block';
-      receiptEl.textContent = receipt;
-      receiptEl.focus();
-    }
-
-    function switchFinTab(tab) {
-      document.getElementById('fin-emi').style.display = (tab === 'emi') ? 'block' : 'none';
-      document.getElementById('fin-sip').style.display = (tab === 'sip') ? 'block' : 'none';
-      document.getElementById('fin-exp').style.display = (tab === 'exp') ? 'block' : 'none';
-      announce("Switched to " + tab.toUpperCase() + " tab.");
-    }
-
-    function calcEMI() {
-      const p = parseFloat(document.getElementById('emiP').value);
-      const r = (parseFloat(document.getElementById('emiR').value) / 100) / 12;
-      const n = parseFloat(document.getElementById('emiN').value) * 12;
-      if (p > 0 && r > 0 && n > 0) {
-        const emi = Math.round((p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1));
-        const total = emi * n;
-        const interest = total - p;
-        const text = `Monthly EMI: ₹${emi}\nTotal Interest: ₹${interest}\nTotal Payable: ₹${total}`;
-        const box = document.getElementById('emiResult');
-        box.style.display = 'block';
-        box.textContent = text;
-        speakText(`Calculated EMI: ${emi} Rupees per month. Total interest: ${interest} Rupees.`);
-        box.focus();
-      }
-    }
-
-    function calcSIP() {
-      const p = parseFloat(document.getElementById('sipP').value);
-      const r = (parseFloat(document.getElementById('sipR').value) / 100) / 12;
-      const n = parseFloat(document.getElementById('sipN').value) * 12;
-      if (p > 0 && r > 0 && n > 0) {
-        const maturity = Math.round(p * (((Math.pow(1 + r, n) - 1) / r) * (1 + r)));
-        const invested = p * n;
-        const gain = maturity - invested;
-        const text = `Total Invested: ₹${invested}\nEstimated Gain: ₹${gain}\nMaturity Value: ₹${maturity}`;
-        const box = document.getElementById('sipResult');
-        box.style.display = 'block';
-        box.textContent = text;
-        speakText(`Maturity amount: ${maturity} Rupees. Total capital invested: ${invested} Rupees.`);
-        box.focus();
-      }
-    }
-
-    let totalExpense = 0;
-    function addExpense() {
-      const desc = document.getElementById('expDesc').value.trim();
-      const amt = parseFloat(document.getElementById('expAmt').value);
-      if (desc && amt > 0) {
-        totalExpense += amt;
-        const list = document.getElementById('expList');
-        const item = document.createElement('li');
-        item.style.padding = "6px 0";
-        item.style.borderBottom = "1px solid var(--border)";
-        item.textContent = `${desc}: ₹${amt}`;
-        list.prepend(item);
-        document.getElementById('expTotal').textContent = "Total Spending: ₹" + totalExpense;
-        speakText(`Added ${desc} for ${amt} Rupees. Total spending is now ${totalExpense} Rupees.`);
-        document.getElementById('expDesc').value = '';
-        document.getElementById('expAmt').value = '';
-      }
-    }
-
-    function generateExamQA() {
-      const topic = document.getElementById('examTopic').value.trim();
-      if (!topic) {
-        speakText("Please enter an exam topic prompt.");
-        return;
-      }
-      const out = `Topic: ${topic}\n\nQ1: What is the constitutional and practical significance of ${topic} in India?\nAnswer: In Indian administrative governance, it establishes equal protection under the law, substantive fundamental rights, and non-discrimination enforceable through the Supreme Court and High Courts under Article 32 and 226.`;
-      const box = document.getElementById('examQAOut');
-      box.style.display = 'block';
-      box.textContent = out;
-      speakText(`Generated question for ${topic}: What is the constitutional significance in India?`);
-      box.focus();
-    }
-
-    function summarizeStudyNotes() {
-      const summary = "Summary Takeaways:\n1. RBI manages monetary policy and currency supply.\n2. Key regulatory tools: Repo Rate, Reverse Repo, and CRR.\n3. Primary mandate: Maintaining price stability while sustaining economic growth.";
-      const box = document.getElementById('studySummaryOut');
-      box.style.display = 'block';
-      box.textContent = summary;
-      speakText("Summary generated: RBI regulates monetary policy through repo rates to balance inflation and growth.");
-      box.focus();
-    }
-
-    function speakLocation() {
-      speakText("Current GPS location: Bengaluru, Karnataka, India. State Bank Braille ATM is 250 meters straight ahead.");
-    }
-
-    function computeMath() {
-      const expr = document.getElementById('calcInput').value.trim();
-      try {
-        const sanitized = expr.replace(/[^0-9+\-*/().]/g, '');
-        const res = Function('"use strict"; return (' + sanitized + ')')();
-        const out = `${expr} = ${res}`;
-        const box = document.getElementById('calcOut');
-        box.style.display = 'block';
-        box.textContent = out;
-        speakText(`Result is ${res}`);
-        box.focus();
-      } catch (e) {
-        speakText("Invalid math calculation expression.");
-      }
-    }
-
-    window.addEventListener('keydown', (e) => {
-      if (e.altKey) {
-        switch (e.key.toLowerCase()) {
-          case 'h': navigate('home'); break;
-          case 'p': executeOCRSimulation(); break;
-          case 'r': playDocumentSpeech(); break;
-          case 'e': runCode(); break;
-          case 's': submitBankingForm(); break;
-          case 'c': calcEMI(); break;
-          case 'a': addExpense(); break;
-          case 'g': generateExamQA(); break;
-        }
-      }
+function createCar(x, y) {
+    chassis = Bodies.rectangle(x, y, 110, 30, {
+        collisionFilter: { group: -1 },
+        density: 0.003,
+        friction: 0.8
     });
-  </script>
+
+    driverHead = Bodies.circle(x, y - 28, 14, {
+        collisionFilter: { group: -1 },
+        density: 0.001
+    });
+
+    const headJoint = Constraint.create({
+        bodyA: chassis,
+        pointA: { x: 0, y: -25 },
+        bodyB: driverHead,
+        pointB: { x: 0, y: 0 },
+        stiffness: 1,
+        length: 0
+    });
+
+    wheelBack = Bodies.circle(x - 40, y + 25, 20, {
+        collisionFilter: { group: -1 },
+        friction: 1.0,
+        density: 0.004
+    });
+
+    wheelFront = Bodies.circle(x + 40, y + 25, 20, {
+        collisionFilter: { group: -1 },
+        friction: 1.0,
+        density: 0.004
+    });
+
+    const axelBack = Constraint.create({
+        bodyA: chassis,
+        pointA: { x: -40, y: 15 },
+        bodyB: wheelBack,
+        length: 15,
+        stiffness: 0.2,
+        damping: 0.8
+    });
+
+    const axelFront = Constraint.create({
+        bodyA: chassis,
+        pointA: { x: 40, y: 15 },
+        bodyB: wheelFront,
+        length: 15,
+        stiffness: 0.2,
+        damping: 0.8
+    });
+
+    World.add(world, [chassis, driverHead, headJoint, wheelBack, wheelFront, axelBack, axelFront]);
+}
+
+function generateTerrainChunk() {
+    const step = 80;
+    const endX = nextTerrainX + step;
+    const roughness = Math.min(Math.max((nextTerrainX / 1000) * 15, 20), 120);
+    const endY = height * 0.65 + Math.sin(nextTerrainX * 0.005) * roughness + (Math.random() - 0.5) * 35;
+
+    const midX = (nextTerrainX + endX) / 2;
+    const midY = (nextTerrainY + endY) / 2;
+    const length = Math.hypot(endX - nextTerrainX, endY - nextTerrainY);
+    const angle = Math.atan2(endY - nextTerrainY, endX - nextTerrainX);
+
+    const segment = Bodies.rectangle(midX, midY, length, 40, {
+        isStatic: true,
+        angle: angle,
+        friction: 0.9
+    });
+
+    terrainSegments.push({ body: segment, x1: nextTerrainX, y1: nextTerrainY, x2: endX, y2: endY });
+    World.add(world, segment);
+
+    if (nextTerrainX > 400 && Math.random() < 0.25) {
+        coins.push({ x: midX, y: midY - 45, collected: false });
+    } else if (nextTerrainX > 400 && Math.random() < 0.08) {
+        fuelCans.push({ x: midX, y: midY - 45, collected: false });
+    }
+
+    nextTerrainX = endX;
+    nextTerrainY = endY;
+}
+
+window.addEventListener("keydown", (e) => {
+    if (e.code === "ArrowRight" || e.code === "KeyD") keys.gas = true;
+    if (e.code === "ArrowLeft" || e.code === "KeyA") keys.brake = true;
+});
+
+window.addEventListener("keyup", (e) => {
+    if (e.code === "ArrowRight" || e.code === "KeyD") keys.gas = false;
+    if (e.code === "ArrowLeft" || e.code === "KeyA") keys.brake = false;
+});
+
+const gasBtn = document.getElementById("gasBtn");
+const brakeBtn = document.getElementById("brakeBtn");
+
+gasBtn.addEventListener("touchstart", (e) => { e.preventDefault(); keys.gas = true; });
+gasBtn.addEventListener("touchend", () => { keys.gas = false; });
+gasBtn.addEventListener("mousedown", () => { keys.gas = true; });
+gasBtn.addEventListener("mouseup", () => { keys.gas = false; });
+
+brakeBtn.addEventListener("touchstart", (e) => { e.preventDefault(); keys.brake = true; });
+brakeBtn.addEventListener("touchend", () => { keys.brake = false; });
+brakeBtn.addEventListener("mousedown", () => { keys.brake = true; });
+brakeBtn.addEventListener("mouseup", () => { keys.brake = false; });
+
+function applyCarPhysics() {
+    if (isGameOver) return;
+
+    if (keys.gas && fuel > 0) {
+        Body.setAngularVelocity(wheelBack, 0.4);
+        Body.setAngularVelocity(wheelFront, 0.4);
+        chassis.torque = -0.04;
+        fuel -= 0.08;
+    }
+
+    if (keys.brake) {
+        Body.setAngularVelocity(wheelBack, -0.2);
+        Body.setAngularVelocity(wheelFront, -0.2);
+        chassis.torque = 0.04;
+        if (fuel > 0) fuel -= 0.02;
+    }
+
+    if (fuel > 0) {
+        fuel -= 0.015;
+    } else {
+        fuel = 0;
+        if (Math.abs(chassis.velocity.x) < 0.05 && Math.abs(chassis.velocity.y) < 0.05) {
+            triggerGameOver("OUT OF FUEL");
+        }
+    }
+
+    for (let seg of terrainSegments) {
+        const dX = driverHead.position.x - seg.body.position.x;
+        const dY = driverHead.position.y - seg.body.position.y;
+        if (Math.hypot(dX, dY) < 30) {
+            triggerGameOver("DRIVER DOWN");
+            break;
+        }
+    }
+
+    coins.forEach(c => {
+        if (!c.collected && Math.hypot(chassis.position.x - c.x, chassis.position.y - c.y) < 50) {
+            c.collected = true;
+            coinCount += 5;
+        }
+    });
+
+    fuelCans.forEach(f => {
+        if (!f.collected && Math.hypot(chassis.position.x - f.x, chassis.position.y - f.y) < 50) {
+            f.collected = true;
+            fuel = Math.min(100, fuel + 40);
+        }
+    });
+
+    const dist = Math.max(0, Math.floor((chassis.position.x - 150) / 10));
+    if (dist > maxDistance) maxDistance = dist;
+
+    document.getElementById("distVal").innerText = maxDistance;
+    document.getElementById("coinVal").innerText = coinCount;
+    document.getElementById("fuelBar").style.width = fuel + "%";
+
+    while (chassis.position.x + width > nextTerrainX) {
+        generateTerrainChunk();
+    }
+
+    if (terrainSegments.length > 80) {
+        const removed = terrainSegments.shift();
+        World.remove(world, removed.body);
+    }
+}
+
+function triggerGameOver(reason) {
+    if (isGameOver) return;
+    isGameOver = true;
+    document.getElementById("failReason").innerText = reason;
+    document.getElementById("finalDist").innerText = maxDistance;
+    document.getElementById("finalCoins").innerText = coinCount;
+    document.getElementById("gameOverScreen").style.display = "block";
+}
+
+function restartGame() {
+    World.clear(world);
+    Engine.clear(engine);
+    initGame();
+}
+
+function render() {
+    ctx.clearRect(0, 0, width, height);
+
+    ctx.save();
+    const camX = width * 0.3 - chassis.position.x;
+    const camY = height * 0.6 - chassis.position.y;
+    ctx.translate(camX, camY);
+
+    ctx.fillStyle = "#27ae60";
+    ctx.strokeStyle = "#1e8449";
+    ctx.lineWidth = 4;
+    terrainSegments.forEach(seg => {
+        ctx.beginPath();
+        ctx.moveTo(seg.x1, seg.y1);
+        ctx.lineTo(seg.x2, seg.y2);
+        ctx.lineTo(seg.x2, seg.y2 + 400);
+        ctx.lineTo(seg.x1, seg.y1 + 400);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(seg.x1, seg.y1);
+        ctx.lineTo(seg.x2, seg.y2);
+        ctx.stroke();
+    });
+
+    coins.forEach(c => {
+        if (!c.collected) {
+            ctx.fillStyle = "#f1c40f";
+            ctx.strokeStyle = "#d4ac0d";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(c.x, c.y, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+        }
+    });
+
+    fuelCans.forEach(f => {
+        if (!f.collected) {
+            ctx.fillStyle = "#e74c3c";
+            ctx.fillRect(f.x - 8, f.y - 12, 16, 24);
+            ctx.fillStyle = "#fff";
+            ctx.font = "10px sans-serif";
+            ctx.fillText("GAS", f.x - 10, f.y + 4);
+        }
+    });
+
+    ctx.save();
+    ctx.translate(chassis.position.x, chassis.position.y);
+    ctx.rotate(chassis.angle);
+    ctx.fillStyle = "#e67e22";
+    ctx.fillRect(-55, -15, 110, 30);
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(driverHead.position.x, driverHead.position.y);
+    ctx.rotate(driverHead.angle);
+    ctx.fillStyle = "#f39c12";
+    ctx.beginPath();
+    ctx.arc(0, 0, 14, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    const drawWheel = (w) => {
+        ctx.save();
+        ctx.translate(w.position.x, w.position.y);
+        ctx.rotate(w.angle);
+        ctx.fillStyle = "#333";
+        ctx.beginPath();
+        ctx.arc(0, 0, 20, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#777";
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-15, 0);
+        ctx.lineTo(15, 0);
+        ctx.moveTo(0, -15);
+        ctx.lineTo(0, 15);
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+    };
+
+    drawWheel(wheelBack);
+    drawWheel(wheelFront);
+
+    ctx.restore();
+}
+
+function gameLoop() {
+    Engine.update(engine, 1000 / 60);
+    applyCarPhysics();
+    render();
+    requestAnimationFrame(gameLoop);
+}
+
+initGame();
+requestAnimationFrame(gameLoop);
+</script>
 </body>
-</html>
+  </html>
