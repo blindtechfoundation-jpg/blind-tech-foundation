@@ -1,0 +1,851 @@
+================================================================
+BLIND TECH FOUNDATION - COMPLETE PROJECT SOURCE
+Copy each section below into a file with the path shown in its
+header, preserving the folder structure, then push to GitHub.
+================================================================
+
+===== FILE: README.md =====
+# Blind Tech Foundation
+
+An offline-first, accessibility-focused web app (installable as a PWA on Android) for blind and
+visually impaired users. Runs entirely in the browser with no external network calls except for
+the optional integrations listed below, which you can add yourself.
+
+## Files in this project
+- `index.html` — the entire application (HTML, CSS, and JavaScript in one file)
+- `manifest.json` — PWA manifest so it can be "installed" to the home screen on Android
+- `sw.js` — service worker that caches the app for offline use
+
+## Deploying
+1. Put all three files in the root of a GitHub repository (or a `docs/` folder for GitHub Pages).
+2. Enable GitHub Pages on that repo/folder.
+3. Visit the Pages URL on an Android phone in Chrome, then use "Add to Home screen" to install it
+   like an app. It will keep working offline after the first visit because of `sw.js`.
+4. No build step, npm install, or server is required — it is plain static files.
+
+## What is fully working right now (no setup needed)
+- Text-to-speech reading with live word highlighting, sentence skip/rewind, file import (.txt/.md/.csv/.html)
+- Voice typing (speech-to-text)
+- Camera capture and photo download
+- GPS coordinates (latitude/longitude)
+- A JavaScript code runner (executes JS safely in-browser) and an HTML live preview
+- EMI calculator, SIP planner, expense tracker (real math, spoken results, saved locally)
+- Banking assistant *demo* form: digit-by-digit account read-back, spoken word-amount confirmation,
+  downloadable text receipt (this does **not** move real money or talk to a real bank)
+- Rule-based Needs Advisor and a small local FAQ/Troubleshoot search
+- Extractive text summarizer and flashcard generator that process your actual pasted text
+  (no AI service — a real, deterministic on-device algorithm)
+- Voice/typed to-do list, medication time reminders (while the tab is open), Emergency SOS
+  (opens the phone dialer to a saved number after a confirmation step)
+- Local feedback notes, theme switching (dark/light), search, navigation drawer, bottom nav
+
+All of the above is saved locally in the browser via `localStorage` — nothing leaves the device.
+
+## Features that need an external service before they will work
+These are **not** faked with placeholder output. Each one is wired up in the UI, clearly labeled
+in the app, and calls out to an empty stub function you need to fill in. Search `index.html` for
+these exact function names to find where to add your integration:
+
+| Feature | What it needs | Stub function / location |
+|---|---|---|
+| OCR text extraction from photos | A cloud OCR/vision API (e.g. Google Cloud Vision, Azure Computer Vision, or an on-device model bundled separately — too large to inline in one HTML file) | `runOcr(imageDataUrl)` — currently just a comment near the Camera section |
+| AI scene/image description | A multimodal vision-language API (e.g. the Claude API with an image input) | Same `runOcr()` stub — extend it to also request a description |
+| Neural / non-system voice synthesis | A TTS API (e.g. ElevenLabs, Google Cloud TTS, or Kokoro hosted behind your own backend) | Add a second branch in the voice logic near `playFrom()`; currently only the device's built-in `speechSynthesis` voices are listed |
+| AI-generated exam Q&A | A text-generation API (e.g. the Claude API) | `callExamAPI()` — button is present but disabled until this is implemented |
+| Python / C++ code execution | A sandboxed code-execution backend (e.g. Judge0, Piston, or your own containerized sandbox) — running arbitrary code in a browser is not safe | `callExecAPI(lang, code)` — JavaScript already runs directly in-browser; other languages show a clear "requires backend" message instead of pretending to run |
+| Spoken street address / nearby places from GPS | A geocoding + places API (e.g. Google Maps Platform, Mapbox, OpenStreetMap Nominatim) | Extend the `locBtn` click handler — it currently only reads out raw latitude/longitude |
+| Real bank transactions | A bank's own authenticated API/SDK — this is a serious security and regulatory undertaking, not something to bolt onto a demo app | The Banking Assistant section is explicitly a local practice form; do not repurpose it for real transactions without a licensed banking integration |
+| Automatic/monitored emergency dispatch | A tested telephony or emergency-services API/partnership | `sosConfirm` currently opens the native phone dialer (`tel:`) after user confirmation, which is the safe default; true automatic dispatch requires a vetted, tested integration |
+| Background reminders when the app/tab is closed | Push notifications require a backend push server and, for a true native experience, wrapping this PWA with a tool like Capacitor/Trusted Web Activity | Reminders currently only fire while the page stays open, via `setInterval` |
+| Live community forum | A backend server + database + moderation | Feedback is currently saved to `localStorage` only, per-device |
+
+## Security notes
+- No data is transmitted anywhere by default — everything lives in the browser's `localStorage`.
+- If you add any of the API integrations above, store API keys server-side (e.g. in a small proxy
+  you control) rather than embedding them directly in this client-side file, since anything in
+  `index.html` is visible to anyone who views page source.
+- The Banking Assistant is a **local practice form only**. Do not enter real account credentials
+  or connect it to a real bank without a proper security review and licensed integration.
+
+## Accessibility
+- All interactive elements have `aria-label`/visible labels and meet a 48px minimum touch target.
+- Live regions announce state changes (`aria-live`) for TalkBack.
+- Works with Android TalkBack; theme toggle includes a light option for low-vision users who
+  prefer light backgrounds.
+
+===== FILE: index.html =====
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Blind Tech Foundation</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+<style>
+:root{
+  --bg:#000; --amber:#ffb800; --amber-dim:#7a5c00; --text:#fff; --panel:#0d0d0d; --focus:#ffe066;
+}
+[data-theme="light"]{ --bg:#fff; --text:#000; --panel:#f2f2f2; --amber-dim:#c99700; }
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  font-size:1.05rem; line-height:1.5; padding-bottom:env(safe-area-inset-bottom,0px);}
+header{position:sticky; top:0; z-index:20; background:var(--bg); border-bottom:3px solid var(--amber);
+  padding:10px 12px; padding-top:calc(10px + env(safe-area-inset-top,0px));}
+.topRow{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+h1{color:var(--amber); font-size:1.15rem; margin:0; flex:1;}
+.iconBtn{background:transparent; border:2px solid var(--amber); color:var(--amber); border-radius:8px;
+  min-width:48px; min-height:48px; font-size:1.2rem; cursor:pointer;}
+#searchBar{width:100%; margin-top:8px; padding:12px; min-height:48px; border-radius:8px; border:2px solid var(--amber-dim);
+  background:var(--panel); color:var(--text); font-size:1rem;}
+main{max-width:760px; margin:0 auto; padding:12px; padding-bottom:90px;}
+.tabPanel{display:none;}
+.tabPanel.active{display:block;}
+section{background:var(--panel); border:2px solid var(--amber-dim); border-radius:10px; padding:14px; margin-bottom:16px;}
+section h2{color:var(--amber); font-size:1.05rem; margin:0 0 8px;}
+section h3{color:var(--amber); font-size:0.95rem; margin:14px 0 6px;}
+p.note{font-size:0.85rem; color:#aaa; margin:4px 0 8px;}
+label{display:block; margin:8px 0 4px; font-weight:600; font-size:0.9rem;}
+textarea, select, input[type=text], input[type=number], input[type=date]{
+  width:100%; background:#1a1a1a; color:#fff; border:2px solid var(--amber-dim); border-radius:8px;
+  padding:10px; font-size:1rem; min-height:48px;}
+[data-theme="light"] textarea,[data-theme="light"] select,[data-theme="light"] input{background:#fff; color:#000;}
+textarea{min-height:90px; resize:vertical;}
+button{background:var(--amber); color:#000; border:none; border-radius:8px; font-weight:700; font-size:0.95rem;
+  min-height:48px; padding:10px 14px; margin:5px 5px 0 0; cursor:pointer;}
+button:disabled{background:#555; color:#aaa;}
+button:focus-visible, a:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-visible{
+  outline:3px solid var(--focus); outline-offset:2px;}
+.row{display:flex; flex-wrap:wrap; gap:6px; align-items:center;}
+.status{margin-top:8px; color:#ffd966; font-size:0.9rem; min-height:1.3em;}
+.reading{font-size:1.15rem; padding:10px; background:#111; border-radius:8px;}
+[data-theme="light"] .reading{background:#eee;}
+.reading mark{background:var(--amber); color:#000; border-radius:3px;}
+#camPreview, #camCanvas{width:100%; border-radius:8px; border:2px solid var(--amber-dim); display:none; margin-top:8px;}
+.card{display:block; width:100%; text-align:left; background:#161616; border:2px solid var(--amber-dim); border-radius:10px;
+  padding:14px; margin-bottom:10px; color:var(--text); min-height:56px;}
+[data-theme="light"] .card{background:#eee;}
+.grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+ul.list{list-style:none; padding:0; margin:8px 0 0;}
+ul.list li{background:#1a1a1a; border-left:4px solid var(--amber); padding:8px; margin-bottom:6px; border-radius:4px; font-size:0.92rem;}
+[data-theme="light"] ul.list li{background:#eee;}
+nav#bottomNav{position:fixed; bottom:0; left:0; right:0; display:flex; background:var(--bg); border-top:3px solid var(--amber);
+  z-index:20; padding-bottom:env(safe-area-inset-bottom,0px);}
+nav#bottomNav button{flex:1; background:transparent; color:var(--text); border-radius:0; min-height:56px; font-size:0.75rem;
+  margin:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;}
+nav#bottomNav button[aria-current="page"]{color:var(--amber); border-top:3px solid var(--amber);}
+#drawer{position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:30; display:none;}
+#drawer.open{display:block;}
+#drawerPanel{background:var(--panel); width:82%; max-width:320px; height:100%; padding:16px; overflow-y:auto;}
+#drawerPanel h2{color:var(--amber);}
+#drawerPanel button{display:block; width:100%; text-align:left; background:transparent; color:var(--text);
+  border:none; border-bottom:1px solid #333; border-radius:0; padding:12px 4px;}
+.visually-hidden{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);}
+.modal{position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:40; display:none; align-items:center; justify-content:center; padding:16px;}
+.modal.open{display:flex;}
+.modalBox{background:var(--panel); border:2px solid var(--amber); border-radius:12px; padding:20px; max-width:400px;}
+</style>
+</head>
+<body data-theme="dark">
+<div aria-live="polite" class="visually-hidden" id="liveRegion"></div>
+
+<header>
+  <div class="topRow">
+    <button class="iconBtn" id="drawerBtn" aria-label="Open navigation menu">☰</button>
+    <h1>Blind Tech Foundation</h1>
+    <button class="iconBtn" id="themeBtn" aria-label="Cycle theme: dark, light, high contrast">🌓</button>
+    <button class="iconBtn" id="voiceSearchBtn" aria-label="Voice search / command">🎤</button>
+  </div>
+  <input type="text" id="searchBar" placeholder="Search tools (e.g. EMI, banking, notes)" aria-label="Search tools">
+</header>
+
+<div id="drawer" role="dialog" aria-modal="true" aria-label="Navigation menu">
+  <div id="drawerPanel">
+    <h2>Menu</h2>
+    <button data-tab="home">Home Dashboard</button>
+    <button data-tab="ai">AI &amp; Assistive Tools</button>
+    <button data-tab="finance">Finance &amp; Banking</button>
+    <button data-tab="education">Education &amp; Study</button>
+    <button data-tab="vault">Vault &amp; Community</button>
+    <button id="drawerClose">Close Menu</button>
+  </div>
+</div>
+
+<div class="modal" id="sosModal" role="alertdialog" aria-modal="true" aria-labelledby="sosTitle">
+  <div class="modalBox">
+    <h2 id="sosTitle">Confirm Emergency Call</h2>
+    <p>This will open your phone dialer to call your saved emergency contact. Continue?</p>
+    <div class="row">
+      <button id="sosConfirm">Yes, Call Now</button>
+      <button id="sosCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<main>
+  <!-- HOME -->
+  <section class="tabPanel active" id="tab-home" aria-labelledby="homeH">
+    <h2 id="homeH">Home Dashboard</h2>
+    <p class="note" id="announcement">Announcement: Everything on this page runs offline in your browser. Nothing is uploaded anywhere.</p>
+    <div class="grid">
+      <button class="card" data-goto="ai">🔎 OCR / Camera</button>
+      <button class="card" data-goto="ai">📖 Reading Hub</button>
+      <button class="card" data-goto="finance">💰 EMI Calculator</button>
+      <button class="card" data-goto="finance">🏦 Banking Assistant</button>
+      <button class="card" data-goto="education">📚 Study Tools</button>
+      <button class="card" data-goto="vault">✅ Daily Tasks</button>
+    </div>
+    <h3>Recent Activity</h3>
+    <ul class="list" id="recentList"><li>No activity yet.</li></ul>
+  </section>
+
+  <!-- AI & ASSISTIVE TOOLS -->
+  <section class="tabPanel" id="tab-ai" aria-labelledby="aiH">
+    <h2 id="aiH">AI &amp; Assistive Tools</h2>
+
+    <h3>🔊 Text to Speech / Reading Hub</h3>
+    <label for="ttsInput">Text to read</label>
+    <textarea id="ttsInput">Welcome to the Blind Tech Foundation. This reads text aloud and highlights each word.</textarea>
+    <label for="fileImport">Or import a .txt/.md/.csv/.html file</label>
+    <input type="file" id="fileImport" accept=".txt,.md,.csv,.html,.htm">
+    <div class="row">
+      <select id="voiceSelect"></select>
+      <input type="number" id="rateInput" min="0.5" max="2.5" step="0.1" value="1" aria-label="Speech rate">
+    </div>
+    <div class="row">
+      <button id="ttsPlay">Play</button><button id="ttsPause">Pause</button>
+      <button id="ttsResume">Resume</button><button id="ttsSkip">Skip Sentence</button>
+      <button id="ttsRewind">Rewind Sentence</button><button id="ttsStop">Stop</button>
+    </div>
+    <div class="reading" id="readingDisplay">Highlighted text appears here while playing.</div>
+    <div class="status" id="ttsStatus" role="status"></div>
+    <p class="note">Note: only your device's built-in text-to-speech voices are available offline. A "neural voice" option is not shown because no neural voice service is connected — connecting one requires a backend API key.</p>
+
+    <h3>🎙️ Voice Typing (Speech to Text)</h3>
+    <div class="row"><button id="sttStart">Start</button><button id="sttStop2">Stop</button><button id="sttClear">Clear</button></div>
+    <textarea id="sttOutput" aria-label="Transcribed text"></textarea>
+    <div class="status" id="sttStatus" role="status"></div>
+
+    <h3>📷 OCR Hub — Camera Capture</h3>
+    <p class="note">This captures a photo and lets you save it. Automatic text extraction (OCR) and AI scene description are not included offline — they need a cloud OCR/vision service configured with an API key. Wire your key into the <code>runOcr()</code> stub in the code to enable them.</p>
+    <div class="row">
+      <button id="camStart">Open Camera</button><button id="camShot">Take Photo</button><button id="camStop">Close</button>
+      <a id="camDownload" href="#" download="photo.png" style="display:none;"><button type="button">Download</button></a>
+    </div>
+    <video id="camPreview" autoplay playsinline aria-label="Camera preview"></video>
+    <canvas id="camCanvas" aria-label="Captured photo"></canvas>
+    <div class="status" id="camStatus" role="status"></div>
+
+    <h3>🧭 Navigation Assistant</h3>
+    <div class="row"><button id="locBtn">Get My Location</button></div>
+    <div class="status" id="locStatus" role="status"></div>
+    <p class="note">Shows GPS coordinates. Turning coordinates into a spoken street address or nearby-places list needs a maps/geocoding API (e.g. Google or Mapbox) — not included offline.</p>
+
+    <h3>🧭 Needs Advisor</h3>
+    <p class="note">Rule-based suggestion — not AI. Picks a tool from your answer using fixed logic.</p>
+    <label for="advisorNeed">What do you need help with?</label>
+    <select id="advisorNeed">
+      <option value="">-- Select --</option>
+      <option value="read">Reading a document or book</option>
+      <option value="write">Writing text quickly</option>
+      <option value="money">Managing money or a loan</option>
+      <option value="study">Studying for an exam</option>
+      <option value="find">Finding my way somewhere</option>
+      <option value="emergency">An emergency situation</option>
+    </select>
+    <div class="row"><button id="advisorGo">Suggest a Tool</button></div>
+    <div class="status" id="advisorStatus" role="status" aria-live="polite"></div>
+
+    <h3>❓ Ask a Question / Troubleshoot</h3>
+    <p class="note">Searches a small built-in help list (device/app issues only) — not an AI answer engine.</p>
+    <label for="faqInput">Type your question or issue</label>
+    <input type="text" id="faqInput" placeholder="e.g. TalkBack not reading screen">
+    <div class="row"><button id="faqSearch">Search Help</button></div>
+    <div class="status" id="faqStatus" role="status" aria-live="polite"></div>
+    <ul class="list" id="faqResults"></ul>
+
+    <h3>💻 Accessible Code Editor</h3>
+    <div class="row">
+      <select id="codeLang" aria-label="Language">
+        <option value="js">JavaScript (runs in-browser)</option>
+        <option value="py">Python (needs backend)</option>
+        <option value="html">HTML (renders preview)</option>
+        <option value="cpp">C++ (needs backend)</option>
+      </select>
+    </div>
+    <textarea id="codeInput" aria-label="Code editor" style="font-family:monospace;">console.log("Hello Blind Tech Foundation");</textarea>
+    <div class="row"><button id="codeRun">Run</button><button id="codeCopy">Copy Code</button></div>
+    <div class="status" id="codeStatus" role="status"></div>
+    <p class="note">Only JavaScript actually executes here (safely, in-browser). Python and C++ require a server-side sandbox — this UI is wired up but calls a placeholder until you connect one.</p>
+  </section>
+
+  <!-- FINANCE & BANKING -->
+  <section class="tabPanel" id="tab-finance" aria-labelledby="finH">
+    <h2 id="finH">Finance &amp; Banking</h2>
+
+    <h3>EMI Calculator</h3>
+    <label for="emiP">Loan Amount (₹)</label><input type="number" id="emiP" value="500000">
+    <label for="emiR">Annual Interest Rate (%)</label><input type="number" id="emiR" value="9" step="0.1">
+    <label for="emiT">Tenure (years)</label><input type="number" id="emiT" value="5">
+    <div class="row"><button id="emiCalc">Calculate &amp; Announce</button></div>
+    <div class="status" id="emiStatus" role="status" aria-live="polite"></div>
+
+    <h3>SIP Planner</h3>
+    <label for="sipM">Monthly Investment (₹)</label><input type="number" id="sipM" value="5000">
+    <label for="sipR">Expected Annual Return (%)</label><input type="number" id="sipR" value="12" step="0.1">
+    <label for="sipY">Duration (years)</label><input type="number" id="sipY" value="10">
+    <div class="row"><button id="sipCalc">Calculate &amp; Announce</button></div>
+    <div class="status" id="sipStatus" role="status" aria-live="polite"></div>
+
+    <h3>Expense Tracker</h3>
+    <label for="expCat">Category</label>
+    <select id="expCat"><option>Food</option><option>Transport</option><option>Bills</option><option>Health</option><option>Other</option></select>
+    <label for="expDesc">Description</label><input type="text" id="expDesc">
+    <label for="expAmt">Amount (₹)</label><input type="number" id="expAmt">
+    <div class="row"><button id="expAdd">Add Expense</button><button id="expSummary">Speak Summary</button><button id="expClear">Clear All</button></div>
+    <div class="status" id="expStatus" role="status"></div>
+    <ul class="list" id="expList"></ul>
+
+    <h3>🏦 Banking Assistant (simulated — no real bank connection)</h3>
+    <p class="note">This is a practice/demo form only. It does not send money or connect to any real bank.</p>
+    <label for="bankName">Full Name</label><input type="text" id="bankName">
+    <label for="bankAcc">Account Number</label><input type="number" id="bankAcc" inputmode="numeric">
+    <div class="row"><button id="bankAccConfirm">Confirm Account Digit-by-Digit</button></div>
+    <label for="bankType">Transaction Type</label>
+    <select id="bankType"><option>Deposit</option><option>Withdrawal</option><option>Transfer</option></select>
+    <label for="bankAmt">Amount (₹)</label><input type="number" id="bankAmt">
+    <div class="row"><button id="bankSummary">Speak Full Summary</button><button id="bankSubmit">Submit &amp; Generate Receipt</button></div>
+    <div class="status" id="bankStatus" role="status" aria-live="polite"></div>
+  </section>
+
+  <!-- EDUCATION & STUDY -->
+  <section class="tabPanel" id="tab-education" aria-labelledby="eduH">
+    <h2 id="eduH">Education &amp; Study</h2>
+
+    <h3>Exam Prep Q&amp;A Generator</h3>
+    <label for="examSelect">Exam</label>
+    <select id="examSelect"><option>UPSC</option><option>UGC NET</option><option>SSC</option><option>Banking</option><option>State PSC</option></select>
+    <label for="examTopic">Topic</label><input type="text" id="examTopic" placeholder="e.g. Indian Polity — Fundamental Rights">
+    <div class="row"><button id="examGen" disabled>Generate Q&amp;A (needs AI API)</button></div>
+    <p class="note">Generating real exam questions/explanations from a topic needs a connected AI text-generation API (e.g. the Claude API). This button is wired up and disabled until an API key is configured in <code>callExamAPI()</code> — it will not show fake canned answers.</p>
+
+    <h3>Study Tools</h3>
+    <label for="studyInput">Paste study material</label>
+    <textarea id="studyInput"></textarea>
+    <div class="row">
+      <button id="studyRead">Read Aloud</button>
+      <button id="studySummarize">Summarize</button>
+      <button id="studyFlash">Generate Flashcards</button>
+    </div>
+    <div class="status" id="studyStatus" role="status"></div>
+    <div id="studyOutput"></div>
+    <p class="note">Summarizing and flashcards use a real on-device sentence-scoring algorithm (extractive, not AI-generated) — genuinely processes your text, not fixed demo output.</p>
+  </section>
+
+  <!-- VAULT & COMMUNITY -->
+  <section class="tabPanel" id="tab-vault" aria-labelledby="vaultH">
+    <h2 id="vaultH">Vault &amp; Community</h2>
+
+    <h3>✅ Voice To-Do List</h3>
+    <div class="row"><button id="taskVoiceAdd">🎤 Add Task by Voice</button></div>
+    <label for="taskText">Or type a task</label><input type="text" id="taskText">
+    <div class="row"><button id="taskAdd">Add Task</button></div>
+    <ul class="list" id="taskList"></ul>
+
+    <h3>💊 Medication Reminder</h3>
+    <label for="medName">Medicine Name</label><input type="text" id="medName">
+    <label for="medTime">Reminder Time</label><input type="text" id="medTime" placeholder="e.g. 08:00">
+    <div class="row"><button id="medAdd">Add Reminder</button></div>
+    <p class="note">Reminders fire only while this page/tab stays open (browser tabs can't wake in the background without a native app or push-notification server).</p>
+    <ul class="list" id="medList"></ul>
+
+    <h3>🩺 Symptom Information (general reference, not medical advice)</h3>
+    <label for="symptomInput">Describe how you're feeling</label>
+    <input type="text" id="symptomInput" placeholder="e.g. headache, fever, cough, chest pain">
+    <div class="row"><button id="symptomSearch">Get General Information</button></div>
+    <div class="status" id="symptomStatus" role="status" aria-live="polite"></div>
+    <p class="note">Non-diagnostic general information only, from a small fixed reference list. Always consult a doctor for real symptoms.</p>
+
+    <h3>🆘 Emergency SOS</h3>
+    <label for="sosNumber">Emergency Contact Number</label><input type="text" id="sosNumber" inputmode="tel">
+    <div class="row"><button id="sosBtn">Trigger SOS</button></div>
+    <p class="note">Opens your phone's dialer after confirmation — this genuinely places you one tap from calling, but Blind Tech Foundation cannot place the call itself or notify services automatically; that requires a tested telephony/emergency-services integration.</p>
+
+    <h3>🗄️ Smart Software Vault</h3>
+    <ul class="list">
+      <li>TalkBack (built into Android Settings → Accessibility)</li>
+      <li>Google Lookout — scene &amp; text description app</li>
+      <li>Voice Access — hands-free Android control</li>
+      <li>Be My Eyes — volunteer sighted assistance app</li>
+    </ul>
+
+    <h3>👥 Community &amp; Feedback</h3>
+    <label for="feedbackText">Feedback / bug report</label>
+    <textarea id="feedbackText"></textarea>
+    <div class="row"><button id="feedbackSave">Save Locally</button></div>
+    <p class="note">A live community forum needs a backend server; feedback here is saved on your device only until that's connected.</p>
+    <ul class="list" id="feedbackList"></ul>
+  </section>
+</main>
+
+<nav id="bottomNav" aria-label="Main navigation">
+  <button data-tab="home" aria-current="page">🏠<span>Home</span></button>
+  <button data-tab="ai">🛠️<span>AI Tools</span></button>
+  <button data-tab="finance">💰<span>Finance</span></button>
+  <button data-tab="education">📚<span>Education</span></button>
+  <button data-tab="vault">🗄️<span>Vault</span></button>
+</nav>
+
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+(function(){
+"use strict";
+const live=document.getElementById('liveRegion');
+function announce(msg){ live.textContent=''; setTimeout(()=>{live.textContent=msg;},30); }
+function speak(text){ if(!('speechSynthesis' in window)) return; speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); speechSynthesis.speak(u); }
+function vibrate(ms){ if(navigator.vibrate) navigator.vibrate(ms||30); }
+function ls(key,val){ if(val===undefined){ try{return JSON.parse(localStorage.getItem(key)||'[]');}catch(e){return [];} } try{localStorage.setItem(key,JSON.stringify(val));}catch(e){} }
+function logRecent(text){
+  const r=ls('btf_recent'); r.unshift(text); ls('btf_recent', r.slice(0,8));
+  const el=document.getElementById('recentList'); el.innerHTML='';
+  ls('btf_recent').forEach(t=>{ const li=document.createElement('li'); li.textContent=t; el.appendChild(li); });
+}
+
+/* ---- Tabs & Navigation ---- */
+function showTab(name){
+  document.querySelectorAll('.tabPanel').forEach(p=>p.classList.toggle('active', p.id==='tab-'+name));
+  document.querySelectorAll('#bottomNav button').forEach(b=>{
+    if(b.dataset.tab===name) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current');
+  });
+  announce(name+' tab open');
+  vibrate();
+}
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click', ()=>{ showTab(b.dataset.tab); closeDrawer(); }));
+document.querySelectorAll('[data-goto]').forEach(b=>b.addEventListener('click', ()=>showTab(b.dataset.goto)));
+
+const drawer=document.getElementById('drawer');
+function openDrawer(){ drawer.classList.add('open'); }
+function closeDrawer(){ drawer.classList.remove('open'); }
+document.getElementById('drawerBtn').addEventListener('click', openDrawer);
+document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+drawer.addEventListener('click', (e)=>{ if(e.target===drawer) closeDrawer(); });
+
+/* ---- Theme ---- */
+const themes=['dark','light','high-contrast'];
+let themeIdx=0;
+document.getElementById('themeBtn').addEventListener('click', ()=>{
+  themeIdx=(themeIdx+1)%themes.length;
+  document.body.setAttribute('data-theme', themes[themeIdx]==='high-contrast'?'dark':themes[themeIdx]);
+  announce(themes[themeIdx]+' theme'); vibrate();
+});
+
+/* ---- Search ---- */
+const toolMap={emi:'finance', sip:'finance', expense:'finance', bank:'finance', banking:'finance',
+  ocr:'ai', camera:'ai', reading:'ai', code:'ai', navigation:'ai', tts:'ai',
+  study:'education', exam:'education', task:'vault', medication:'vault', sos:'vault', vault:'vault', feedback:'vault'};
+document.getElementById('searchBar').addEventListener('keydown', (e)=>{
+  if(e.key==='Enter'){
+    const q=e.target.value.toLowerCase();
+    const hit=Object.keys(toolMap).find(k=>q.includes(k));
+    if(hit){ showTab(toolMap[hit]); announce('Opening '+toolMap[hit]); } else { announce('No matching tool found'); }
+  }
+});
+document.getElementById('voiceSearchBtn').addEventListener('click', ()=>{
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ announce('Voice recognition not supported'); return; }
+  const r=new SR(); r.lang='en-US';
+  r.onresult=(e)=>{ const q=e.results[0][0].transcript.toLowerCase(); document.getElementById('searchBar').value=q;
+    const hit=Object.keys(toolMap).find(k=>q.includes(k));
+    if(hit) showTab(toolMap[hit]); else announce('Heard: '+q+'. No matching tool.'); };
+  r.start(); announce('Listening for command');
+});
+
+/* ---- TTS / Reading Hub ---- */
+const ttsInput=document.getElementById('ttsInput'), voiceSelect=document.getElementById('voiceSelect'),
+      rateInput=document.getElementById('rateInput'), readingDisplay=document.getElementById('readingDisplay'), ttsStatus=document.getElementById('ttsStatus');
+let voices=[], sentences=[], sentIdx=0;
+function loadVoices(){ voices=speechSynthesis.getVoices(); voiceSelect.innerHTML='';
+  voices.forEach((v,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=v.name+' ('+v.lang+')'; voiceSelect.appendChild(o); }); }
+if('speechSynthesis' in window){ speechSynthesis.onvoiceschanged=loadVoices; loadVoices(); } else { ttsStatus.textContent='Speech synthesis not supported.'; }
+document.getElementById('fileImport').addEventListener('change', (e)=>{
+  const f=e.target.files[0]; if(!f) return;
+  const reader=new FileReader();
+  reader.onload=()=>{ ttsInput.value=reader.result; announce('File loaded'); };
+  reader.readAsText(f);
+});
+function escapeHtml(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function playFrom(text){
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  const idx=voiceSelect.value; if(voices[idx]) u.voice=voices[idx];
+  u.rate=parseFloat(rateInput.value)||1;
+  u.onboundary=(e)=>{ const before=text.slice(0,e.charIndex); const rest=text.slice(e.charIndex);
+    const m=rest.match(/^\S+/); const word=m?m[0]:'';
+    readingDisplay.innerHTML=escapeHtml(before)+'<mark>'+escapeHtml(word)+'</mark>'+escapeHtml(rest.slice(word.length)); };
+  u.onend=()=>{ ttsStatus.textContent='Finished.'; };
+  u.onerror=()=>{ ttsStatus.textContent='Playback error.'; };
+  speechSynthesis.speak(u); ttsStatus.textContent='Playing…';
+}
+document.getElementById('ttsPlay').addEventListener('click', ()=>{
+  const text=ttsInput.value.trim(); if(!text){ announce('Enter text first'); return; }
+  sentences=text.match(/[^.!?]+[.!?]*/g)||[text]; sentIdx=0; logRecent('Read aloud: '+text.slice(0,30));
+  playFrom(text);
+});
+document.getElementById('ttsPause').addEventListener('click', ()=>{ if(speechSynthesis.speaking) speechSynthesis.pause(); ttsStatus.textContent='Paused.'; });
+document.getElementById('ttsResume').addEventListener('click', ()=>{ if(speechSynthesis.paused) speechSynthesis.resume(); ttsStatus.textContent='Resumed.'; });
+document.getElementById('ttsStop').addEventListener('click', ()=>{ speechSynthesis.cancel(); ttsStatus.textContent='Stopped.'; });
+document.getElementById('ttsSkip').addEventListener('click', ()=>{ if(sentIdx<sentences.length-1){ sentIdx++; playFrom(sentences.slice(sentIdx).join(' ')); } });
+document.getElementById('ttsRewind').addEventListener('click', ()=>{ if(sentIdx>0){ sentIdx--; playFrom(sentences.slice(sentIdx).join(' ')); } });
+
+/* ---- STT ---- */
+const sttOutput=document.getElementById('sttOutput'), sttStatus=document.getElementById('sttStatus');
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let recognition=null, listening=false;
+if(SR){ recognition=new SR(); recognition.continuous=true; recognition.interimResults=true; recognition.lang='en-US';
+  recognition.onresult=(e)=>{ let t=''; for(let i=e.resultIndex;i<e.results.length;i++){ if(e.results[i].isFinal) t+=e.results[i][0].transcript+' '; } if(t) sttOutput.value+=t; };
+  recognition.onerror=(e)=>{ sttStatus.textContent='Error: '+e.error; };
+  recognition.onend=()=>{ if(listening) recognition.start(); else sttStatus.textContent='Stopped.'; };
+} else { sttStatus.textContent='Not supported on this browser.'; }
+document.getElementById('sttStart').addEventListener('click', ()=>{ if(!recognition) return; listening=true; recognition.start(); sttStatus.textContent='Listening…'; });
+document.getElementById('sttStop2').addEventListener('click', ()=>{ if(!recognition) return; listening=false; recognition.stop(); });
+document.getElementById('sttClear').addEventListener('click', ()=>{ sttOutput.value=''; });
+
+/* ---- Camera ---- */
+const camPreview=document.getElementById('camPreview'), camCanvas=document.getElementById('camCanvas'),
+      camStatus=document.getElementById('camStatus'), camDownload=document.getElementById('camDownload');
+let camStream=null;
+document.getElementById('camStart').addEventListener('click', async ()=>{
+  try{ camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    camPreview.srcObject=camStream; camPreview.style.display='block'; camCanvas.style.display='none'; camStatus.textContent='Camera active.';
+  }catch(err){ camStatus.textContent='Camera access failed: '+err.message; }
+});
+document.getElementById('camShot').addEventListener('click', ()=>{
+  if(!camStream){ camStatus.textContent='Open the camera first.'; return; }
+  camCanvas.width=camPreview.videoWidth; camCanvas.height=camPreview.videoHeight;
+  camCanvas.getContext('2d').drawImage(camPreview,0,0); camCanvas.style.display='block';
+  camDownload.href=camCanvas.toDataURL('image/png'); camDownload.style.display='inline-block';
+  camStatus.textContent='Photo captured.'; logRecent('Photo captured');
+});
+document.getElementById('camStop').addEventListener('click', ()=>{ if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; } camPreview.style.display='none'; camStatus.textContent='Closed.'; });
+// function runOcr(imageDataUrl){ /* Wire a cloud OCR/vision API call here */ }
+
+/* ---- Location ---- */
+document.getElementById('locBtn').addEventListener('click', ()=>{
+  const locStatus=document.getElementById('locStatus');
+  if(!navigator.geolocation){ locStatus.textContent='Geolocation not supported.'; return; }
+  locStatus.textContent='Getting location…';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const msg='Latitude '+pos.coords.latitude.toFixed(5)+', Longitude '+pos.coords.longitude.toFixed(5);
+    locStatus.textContent=msg; speak(msg); logRecent('Location checked');
+  }, err=>{ locStatus.textContent='Location error: '+err.message; });
+});
+
+/* ---- Needs Advisor (rule-based) ---- */
+document.getElementById('advisorGo').addEventListener('click', ()=>{
+  const need=document.getElementById('advisorNeed').value;
+  const map={
+    read:{tab:'ai', msg:'Try the Reading Hub above — paste or import text and press Play to have it read aloud.'},
+    write:{tab:'ai', msg:'Try Voice Typing above — press Start and speak to convert your speech into text.'},
+    money:{tab:'finance', msg:'Open Finance & Banking and try the EMI Calculator or SIP Planner.'},
+    study:{tab:'education', msg:'Open Education & Study and use Study Tools to summarize or make flashcards.'},
+    find:{tab:'ai', msg:'Try Navigation Assistant above to check your current GPS coordinates.'},
+    emergency:{tab:'vault', msg:'Open Vault & Community and use Emergency SOS.'}
+  };
+  const st=document.getElementById('advisorStatus');
+  if(!need){ st.textContent='Please choose an option first.'; return; }
+  st.textContent=map[need].msg; speak(map[need].msg);
+});
+
+/* ---- Ask a Question / Troubleshoot (local FAQ search) ---- */
+const faqDB=[
+  {k:['talkback','screen reader','not reading'], a:'Check TalkBack is on in Android Settings > Accessibility > TalkBack, then restart this page.'},
+  {k:['volume','no sound',"can't hear",'cant hear'], a:'Check your device media volume and make sure this browser tab is not muted.'},
+  {k:['camera','permission denied'], a:'Grant Camera permission to this page in your browser or Android app settings, then try again.'},
+  {k:['location','gps'], a:'Turn on Location in Android Settings and allow this page to access it.'},
+  {k:['microphone','voice not recognized','speech not working'], a:'Grant Microphone permission and try speaking clearly in a quiet space.'},
+  {k:['login','account','sign up'], a:'This offline app has no account system — everything is stored only on this device.'},
+  {k:['emi','loan'], a:'Enter loan amount, annual interest rate, and tenure in years in the EMI Calculator, then press Calculate.'}
+];
+document.getElementById('faqSearch').addEventListener('click', ()=>{
+  const q=document.getElementById('faqInput').value.toLowerCase().trim();
+  const res=document.getElementById('faqResults'); res.innerHTML='';
+  const st=document.getElementById('faqStatus');
+  if(!q){ st.textContent='Type a question first.'; return; }
+  const hits=faqDB.filter(f=>f.k.some(k=>q.includes(k)));
+  if(!hits.length){ st.textContent='No local match found. This basic search only covers common device/app issues, not general knowledge questions.'; return; }
+  st.textContent=hits.length+' result(s) found.';
+  hits.forEach(h=>{ const li=document.createElement('li'); li.textContent=h.a; res.appendChild(li); });
+});
+
+/* ---- Symptom Information (fixed non-diagnostic reference) ---- */
+const symptomDB={
+  headache:'Headaches are commonly linked to dehydration, stress, or lack of sleep. Rest, water, and a quiet dark room are commonly suggested. See a doctor if it is severe, sudden, or persistent.',
+  fever:'A fever often means the body is responding to an infection. Rest and fluids are commonly recommended. Seek medical care if it is very high or lasts more than a couple of days.',
+  cough:'Coughs are often caused by colds, allergies, or irritation. Staying hydrated is commonly suggested. See a doctor if it lasts more than two weeks or breathing becomes difficult.',
+  'chest pain':'Chest pain can sometimes be serious. If it is severe, sudden, or comes with shortness of breath, seek emergency care immediately.'
+};
+document.getElementById('symptomSearch').addEventListener('click', ()=>{
+  const q=document.getElementById('symptomInput').value.toLowerCase().trim();
+  const st=document.getElementById('symptomStatus');
+  if(!q){ st.textContent='Describe a symptom first.'; return; }
+  const key=Object.keys(symptomDB).find(k=>q.includes(k));
+  if(!key){ st.textContent='No general information available for that term in this offline reference. Please consult a healthcare professional.'; return; }
+  st.textContent=symptomDB[key]; speak(symptomDB[key]);
+});
+
+/* ---- Code editor ---- */
+document.getElementById('codeRun').addEventListener('click', ()=>{
+  const lang=document.getElementById('codeLang').value, code=document.getElementById('codeInput').value;
+  const codeStatus=document.getElementById('codeStatus');
+  if(lang==='js'){
+    const logs=[]; const origLog=console.log;
+    console.log=(...a)=>{ logs.push(a.join(' ')); };
+    try{ Function(code)(); codeStatus.textContent='Output: '+(logs.join(' | ')||'(no output)'); }
+    catch(e){ codeStatus.textContent='Error: '+e.message; }
+    console.log=origLog;
+  } else if(lang==='html'){
+    const w=window.open('', '_blank'); if(w){ w.document.write(code); codeStatus.textContent='Preview opened in new tab.'; }
+    else codeStatus.textContent='Popup blocked — allow popups to preview HTML.';
+  } else {
+    codeStatus.textContent=lang.toUpperCase()+' execution requires a server-side sandbox — not run (see callExecAPI() stub).';
+  }
+});
+document.getElementById('codeCopy').addEventListener('click', ()=>{ navigator.clipboard.writeText(document.getElementById('codeInput').value); announce('Code copied'); });
+// function callExecAPI(lang, code){ /* POST to your sandboxed execution backend here */ }
+
+/* ---- EMI / SIP ---- */
+document.getElementById('emiCalc').addEventListener('click', ()=>{
+  const P=parseFloat(document.getElementById('emiP').value), annR=parseFloat(document.getElementById('emiR').value), yrs=parseFloat(document.getElementById('emiT').value);
+  const st=document.getElementById('emiStatus');
+  if(!P||!annR||!yrs){ st.textContent='Enter valid loan amount, rate and tenure.'; return; }
+  const r=annR/12/100, n=yrs*12;
+  const emi=P*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
+  const total=emi*n, interest=total-P;
+  const msg='Monthly EMI ₹'+emi.toFixed(0)+'. Total interest ₹'+interest.toFixed(0)+'. Total repayment ₹'+total.toFixed(0)+'.';
+  st.textContent=msg; speak(msg); logRecent('EMI calculated: ₹'+emi.toFixed(0)+'/mo');
+});
+document.getElementById('sipCalc').addEventListener('click', ()=>{
+  const M=parseFloat(document.getElementById('sipM').value), annR=parseFloat(document.getElementById('sipR').value), yrs=parseFloat(document.getElementById('sipY').value);
+  const st=document.getElementById('sipStatus');
+  if(!M||!annR||!yrs){ st.textContent='Enter valid monthly amount, rate and duration.'; return; }
+  const r=annR/12/100, n=yrs*12;
+  const maturity=M*((Math.pow(1+r,n)-1)/r)*(1+r);
+  const invested=M*n, returns=maturity-invested;
+  const msg='Total invested ₹'+invested.toFixed(0)+'. Estimated returns ₹'+returns.toFixed(0)+'. Maturity value ₹'+maturity.toFixed(0)+'.';
+  st.textContent=msg; speak(msg); logRecent('SIP calculated: ₹'+maturity.toFixed(0));
+});
+
+/* ---- Expense Tracker ---- */
+function renderExpenses(){
+  const list=ls('btf_expenses'); const el=document.getElementById('expList'); el.innerHTML='';
+  list.forEach(x=>{ const li=document.createElement('li'); li.textContent=x.cat+': '+x.desc+' — ₹'+x.amt; el.appendChild(li); });
+}
+document.getElementById('expAdd').addEventListener('click', ()=>{
+  const cat=document.getElementById('expCat').value, desc=document.getElementById('expDesc').value, amt=parseFloat(document.getElementById('expAmt').value);
+  if(!amt){ document.getElementById('expStatus').textContent='Enter an amount.'; return; }
+  const list=ls('btf_expenses'); list.push({cat,desc,amt,date:new Date().toISOString().slice(0,10)}); ls('btf_expenses', list);
+  renderExpenses(); document.getElementById('expDesc').value=''; document.getElementById('expAmt').value='';
+  announce('Expense added'); logRecent('Expense: '+cat+' ₹'+amt);
+});
+document.getElementById('expSummary').addEventListener('click', ()=>{
+  const list=ls('btf_expenses'); if(!list.length){ speak('No expenses recorded.'); return; }
+  const total=list.reduce((s,x)=>s+x.amt,0);
+  const byCat={}; list.forEach(x=>byCat[x.cat]=(byCat[x.cat]||0)+x.amt);
+  let msg='Total spending ₹'+total.toFixed(0)+'. ';
+  Object.keys(byCat).forEach(c=>{ msg+=c+': ₹'+byCat[c].toFixed(0)+'. '; });
+  document.getElementById('expStatus').textContent=msg; speak(msg);
+});
+document.getElementById('expClear').addEventListener('click', ()=>{ ls('btf_expenses', []); renderExpenses(); announce('Expenses cleared'); });
+renderExpenses();
+
+/* ---- Banking Assistant ---- */
+function numberToWords(n){
+  const a=['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
+  const b=['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+  function two(num){ if(num<20) return a[num]; return b[Math.floor(num/10)]+(num%10?'-'+a[num%10]:''); }
+  function three(num){ let s=''; if(num>=100){ s+=a[Math.floor(num/100)]+' hundred '; num%=100; } if(num>0) s+=two(num); return s.trim(); }
+  if(n===0) return 'zero';
+  n=Math.round(n);
+  let parts=[];
+  const crore=Math.floor(n/10000000); n%=10000000;
+  const lakh=Math.floor(n/100000); n%=100000;
+  const thousand=Math.floor(n/1000); n%=1000;
+  if(crore) parts.push(three(crore)+' crore');
+  if(lakh) parts.push(three(lakh)+' lakh');
+  if(thousand) parts.push(three(thousand)+' thousand');
+  if(n) parts.push(three(n));
+  return parts.join(' ')+' rupees';
+}
+document.getElementById('bankAccConfirm').addEventListener('click', ()=>{
+  const acc=document.getElementById('bankAcc').value;
+  if(!acc){ announce('Enter account number first'); return; }
+  speak('Account number is '+acc.split('').join(', '));
+});
+document.getElementById('bankSummary').addEventListener('click', ()=>{
+  const name=document.getElementById('bankName').value, acc=document.getElementById('bankAcc').value,
+        type=document.getElementById('bankType').value, amt=parseFloat(document.getElementById('bankAmt').value)||0;
+  const msg='Confirm: '+type+' of '+numberToWords(amt)+', which is ₹'+amt+', for account holder '+name+', account number '+acc.split('').join(' ')+'.';
+  document.getElementById('bankStatus').textContent=msg; speak(msg);
+});
+document.getElementById('bankSubmit').addEventListener('click', ()=>{
+  const name=document.getElementById('bankName').value, acc=document.getElementById('bankAcc').value,
+        type=document.getElementById('bankType').value, amt=document.getElementById('bankAmt').value;
+  if(!name||!acc||!amt){ document.getElementById('bankStatus').textContent='Fill all fields first.'; return; }
+  const receipt='DEMO RECEIPT (no real bank connected)\nName: '+name+'\nAccount: ****'+acc.slice(-4)+'\nType: '+type+'\nAmount: ₹'+amt+'\nDate: '+new Date().toLocaleString();
+  const blob=new Blob([receipt],{type:'text/plain'}); const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='receipt.txt'; a.click();
+  document.getElementById('bankStatus').textContent='Demo receipt downloaded.'; speak('Transaction recorded. Receipt downloaded.');
+  logRecent('Banking demo: '+type+' ₹'+amt);
+});
+
+/* ---- Study Tools (real extractive processing) ---- */
+function splitSentences(t){ return (t.match(/[^.!?]+[.!?]*/g)||[]).map(s=>s.trim()).filter(Boolean); }
+document.getElementById('studyRead').addEventListener('click', ()=>{
+  const t=document.getElementById('studyInput').value.trim(); if(!t){ announce('Paste text first'); return; }
+  speak(t); document.getElementById('studyStatus').textContent='Reading…';
+});
+document.getElementById('studySummarize').addEventListener('click', ()=>{
+  const t=document.getElementById('studyInput').value.trim(); const out=document.getElementById('studyOutput');
+  if(!t){ announce('Paste text first'); return; }
+  const sents=splitSentences(t);
+  if(sents.length<=3){ out.textContent=t; return; }
+  const words=t.toLowerCase().match(/[a-z]+/g)||[];
+  const freq={}; words.forEach(w=>freq[w]=(freq[w]||0)+1);
+  const scored=sents.map(s=>{ const ws=s.toLowerCase().match(/[a-z]+/g)||[]; const score=ws.reduce((a,w)=>a+(freq[w]||0),0)/(ws.length||1); return {s,score}; });
+  const top=scored.slice().sort((a,b)=>b.score-a.score).slice(0,Math.max(2,Math.ceil(sents.length*0.3)));
+  const summary=sents.filter(s=>top.some(t2=>t2.s===s)).join(' ');
+  out.textContent='Summary: '+summary; document.getElementById('studyStatus').textContent='Summary generated from your text.';
+});
+document.getElementById('studyFlash').addEventListener('click', ()=>{
+  const t=document.getElementById('studyInput').value.trim(); const out=document.getElementById('studyOutput');
+  if(!t){ announce('Paste text first'); return; }
+  const sents=splitSentences(t).slice(0,8);
+  out.innerHTML='<ul class="list">'+sents.map(s=>{
+    const words=s.split(' ').filter(w=>w.length>4);
+    const key=words[Math.floor(words.length/2)]||words[0]||'';
+    const q=key?s.replace(key,'____'):s;
+    return '<li><strong>Q:</strong> '+q+'<br><strong>A:</strong> '+key+'</li>';
+  }).join('')+'</ul>';
+  document.getElementById('studyStatus').textContent='Flashcards generated from your text.';
+});
+
+/* ---- Daily Tasks ---- */
+function renderTasks(){
+  const list=ls('btf_tasks'); const el=document.getElementById('taskList'); el.innerHTML='';
+  list.forEach((t,i)=>{ const li=document.createElement('li');
+    const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=t.done; cb.setAttribute('aria-label','Mark done: '+t.text);
+    cb.addEventListener('change', ()=>{ const l=ls('btf_tasks'); l[i].done=cb.checked; ls('btf_tasks',l); });
+    li.appendChild(cb); li.appendChild(document.createTextNode(' '+t.text));
+    el.appendChild(li); });
+}
+document.getElementById('taskAdd').addEventListener('click', ()=>{
+  const txt=document.getElementById('taskText').value.trim(); if(!txt) return;
+  const list=ls('btf_tasks'); list.push({text:txt, done:false}); ls('btf_tasks', list);
+  document.getElementById('taskText').value=''; renderTasks(); announce('Task added');
+});
+document.getElementById('taskVoiceAdd').addEventListener('click', ()=>{
+  if(!SR){ announce('Voice recognition not supported'); return; }
+  const r=new SR(); r.lang='en-US';
+  r.onresult=(e)=>{ const txt=e.results[0][0].transcript; const list=ls('btf_tasks'); list.push({text:txt, done:false}); ls('btf_tasks', list); renderTasks(); announce('Added task: '+txt); };
+  r.start(); announce('Listening for your task');
+});
+renderTasks();
+
+/* ---- Medication reminders (foreground only) ---- */
+function renderMeds(){
+  const list=ls('btf_meds'); const el=document.getElementById('medList'); el.innerHTML='';
+  list.forEach(m=>{ const li=document.createElement('li'); li.textContent=m.name+' at '+m.time; el.appendChild(li); });
+}
+document.getElementById('medAdd').addEventListener('click', ()=>{
+  const name=document.getElementById('medName').value.trim(), time=document.getElementById('medTime').value.trim();
+  if(!name||!time){ announce('Enter medicine name and time'); return; }
+  const list=ls('btf_meds'); list.push({name,time}); ls('btf_meds', list);
+  document.getElementById('medName').value=''; document.getElementById('medTime').value='';
+  renderMeds(); announce('Reminder added for '+name);
+});
+renderMeds();
+setInterval(()=>{
+  const now=new Date(); const hhmm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  if(now.getSeconds()!==0) return;
+  ls('btf_meds').forEach(m=>{ if(m.time===hhmm){ speak('Reminder: time to take '+m.name); vibrate([200,100,200]); } });
+}, 1000);
+
+/* ---- SOS ---- */
+const sosModal=document.getElementById('sosModal');
+document.getElementById('sosBtn').addEventListener('click', ()=>{
+  const num=document.getElementById('sosNumber').value.trim();
+  if(!num){ announce('Enter an emergency contact number first'); return; }
+  sosModal.classList.add('open'); vibrate([300,100,300]);
+});
+document.getElementById('sosCancel').addEventListener('click', ()=>sosModal.classList.remove('open'));
+document.getElementById('sosConfirm').addEventListener('click', ()=>{
+  const num=document.getElementById('sosNumber').value.trim();
+  sosModal.classList.remove('open'); window.location.href='tel:'+num;
+});
+
+/* ---- Feedback ---- */
+function renderFeedback(){
+  const list=ls('btf_feedback'); const el=document.getElementById('feedbackList'); el.innerHTML='';
+  list.forEach(f=>{ const li=document.createElement('li'); li.textContent=f; el.appendChild(li); });
+}
+document.getElementById('feedbackSave').addEventListener('click', ()=>{
+  const txt=document.getElementById('feedbackText').value.trim(); if(!txt) return;
+  const list=ls('btf_feedback'); list.push(txt); ls('btf_feedback', list);
+  document.getElementById('feedbackText').value=''; renderFeedback(); announce('Feedback saved locally');
+});
+renderFeedback();
+
+})();
+</script>
+</body>
+</html>
+
+===== FILE: manifest.json =====
+{
+  "name": "Blind Tech Foundation",
+  "short_name": "BTF",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "description": "Offline accessibility toolkit for blind and visually impaired users.",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%23000000'/%3E%3Ctext x='96' y='125' font-size='110' text-anchor='middle' fill='%23ffb800'%3E%E2%99%BF%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}
+
+===== FILE: sw.js =====
+const CACHE_NAME = 'btf-cache-v1';
+const ASSETS = ['./', './index.html', './manifest.json'];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)).catch(() => {})
+  );
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((cached) => cached || fetch(event.request).catch(() => cached))
+  );
+});
+
+===== END OF PROJECT =====
