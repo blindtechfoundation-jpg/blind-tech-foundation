@@ -1,656 +1,303 @@
+================================================================
+BLIND TECH FOUNDATION - COMPLETE PROJECT SOURCE
+Copy each section below into a file with the path shown in its
+header, preserving the folder structure, then push to GitHub.
+================================================================
+
+===== FILE: README.md =====
+# Blind Tech Foundation
+
+An offline-first, accessibility-focused web app (installable as a PWA on Android) for blind and
+visually impaired users. Runs entirely in the browser with no external network calls except for
+the optional integrations listed below, which you can add yourself.
+
+## Files in this project
+- `index.html` â€” the entire application (HTML, CSS, and JavaScript in one file)
+- `manifest.json` â€” PWA manifest so it can be "installed" to the home screen on Android
+- `sw.js` â€” service worker that caches the app for offline use
+
+## Deploying
+1. Put all three files in the root of a GitHub repository (or a `docs/` folder for GitHub Pages).
+2. Enable GitHub Pages on that repo/folder.
+3. Visit the Pages URL on an Android phone in Chrome, then use "Add to Home screen" to install it
+   like an app. It will keep working offline after the first visit because of `sw.js`.
+4. No build step, npm install, or server is required â€” it is plain static files.
+
+## What is fully working right now (no setup needed)
+- Text-to-speech reading with live word highlighting, sentence skip/rewind, file import (.txt/.md/.csv/.html)
+- Voice typing (speech-to-text)
+- Camera capture and photo download
+- GPS coordinates (latitude/longitude)
+- A JavaScript code runner (executes JS safely in-browser) and an HTML live preview
+- EMI calculator, SIP planner, expense tracker (real math, spoken results, saved locally)
+- Banking assistant *demo* form: digit-by-digit account read-back, spoken word-amount confirmation,
+  downloadable text receipt (this does **not** move real money or talk to a real bank)
+- Rule-based Needs Advisor and a small local FAQ/Troubleshoot search
+- Extractive text summarizer and flashcard generator that process your actual pasted text
+  (no AI service â€” a real, deterministic on-device algorithm)
+- Voice/typed to-do list, medication time reminders (while the tab is open), Emergency SOS
+  (opens the phone dialer to a saved number after a confirmation step)
+- Local feedback notes, theme switching (dark/light), search, navigation drawer, bottom nav
+
+All of the above is saved locally in the browser via `localStorage` â€” nothing leaves the device.
+
+## Features that need an external service before they will work
+These are **not** faked with placeholder output. Each one is wired up in the UI, clearly labeled
+in the app, and calls out to an empty stub function you need to fill in. Search `index.html` for
+these exact function names to find where to add your integration:
+
+| Feature | What it needs | Stub function / location |
+|---|---|---|
+| OCR text extraction from photos | A cloud OCR/vision API (e.g. Google Cloud Vision, Azure Computer Vision, or an on-device model bundled separately â€” too large to inline in one HTML file) | `runOcr(imageDataUrl)` â€” currently just a comment near the Camera section |
+| AI scene/image description | A multimodal vision-language API (e.g. the Claude API with an image input) | Same `runOcr()` stub â€” extend it to also request a description |
+| Neural / non-system voice synthesis | A TTS API (e.g. ElevenLabs, Google Cloud TTS, or Kokoro hosted behind your own backend) | Add a second branch in the voice logic near `playFrom()`; currently only the device's built-in `speechSynthesis` voices are listed |
+| AI-generated exam Q&A | A text-generation API (e.g. the Claude API) | `callExamAPI()` â€” button is present but disabled until this is implemented |
+| Python / C++ code execution | A sandboxed code-execution backend (e.g. Judge0, Piston, or your own containerized sandbox) â€” running arbitrary code in a browser is not safe | `callExecAPI(lang, code)` â€” JavaScript already runs directly in-browser; other languages show a clear "requires backend" message instead of pretending to run |
+| Spoken street address / nearby places from GPS | A geocoding + places API (e.g. Google Maps Platform, Mapbox, OpenStreetMap Nominatim) | Extend the `locBtn` click handler â€” it currently only reads out raw latitude/longitude |
+| Real bank transactions | A bank's own authenticated API/SDK â€” this is a serious security and regulatory undertaking, not something to bolt onto a demo app | The Banking Assistant section is explicitly a local practice form; do not repurpose it for real transactions without a licensed banking integration |
+| Automatic/monitored emergency dispatch | A tested telephony or emergency-services API/partnership | `sosConfirm` currently opens the native phone dialer (`tel:`) after user confirmation, which is the safe default; true automatic dispatch requires a vetted, tested integration |
+| Background reminders when the app/tab is closed | Push notifications require a backend push server and, for a true native experience, wrapping this PWA with a tool like Capacitor/Trusted Web Activity | Reminders currently only fire while the page stays open, via `setInterval` |
+| Live community forum | A backend server + database + moderation | Feedback is currently saved to `localStorage` only, per-device |
+
+## Security notes
+- No data is transmitted anywhere by default â€” everything lives in the browser's `localStorage`.
+- If you add any of the API integrations above, store API keys server-side (e.g. in a small proxy
+  you control) rather than embedding them directly in this client-side file, since anything in
+  `index.html` is visible to anyone who views page source.
+- The Banking Assistant is a **local practice form only**. Do not enter real account credentials
+  or connect it to a real bank without a proper security review and licensed integration.
+
+## Accessibility
+- All interactive elements have `aria-label`/visible labels and meet a 48px minimum touch target.
+- Live regions announce state changes (`aria-live`) for TalkBack.
+- Works with Android TalkBack; theme toggle includes a light option for low-vision users who
+  prefer light backgrounds.
+
+===== FILE: index.html =====
 <!DOCTYPE html>
-<html lang="en" data-theme="high-contrast">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
-  <meta name="description" content="Blind Tech Foundation - Android Mobile Accessibility Suite." />
-  <meta name="theme-color" content="#ffd700" />
-  
-  <!-- Self-contained inline PWA manifest for standalone Android installation -->
-  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Blind%20Tech%20Foundation%20OS%22%2C%22short_name%22%3A%22BlindTech%22%2C%22start_url%22%3A%22.%2Findex.html%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23000000%22%2C%22theme_color%22%3A%22%23ffd700%22%7D" />
-
-  <title>Blind Tech Foundation OS</title>
-
-  <!-- Client-side OCR Library for Offline Image Text Processing -->
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-
-  <style>
-    :root {
-      --bg: #0b0f17;
-      --surface: #131b26;
-      --surface-variant: #1a2433;
-      --card: #141e2b;
-      --card-border: #223249;
-      --text: #ffffff;
-      --text-muted: #9fb0c7;
-      --primary: #ffd700;
-      --primary-text: #000000;
-      --primary-btn: #1d72b8;
-      --primary-btn-text: #ffffff;
-      --secondary: #00e5ff;
-      --border: #ffd700;
-      --focus-ring: #00e5ff;
-      --error: #ff4d4f;
-      --success: #00e676;
-    }
-    [data-theme="dark"] {
-      --bg: #121212;
-      --surface: #1e1e1e;
-      --surface-variant: #252525;
-      --card: #1e1e1e;
-      --card-border: #383838;
-      --text: #e6e6e6;
-      --text-muted: #a0a0a0;
-      --primary: #ffd700;
-      --primary-text: #121212;
-      --primary-btn: #2979ff;
-      --primary-btn-text: #ffffff;
-      --secondary: #80d8ff;
-      --border: #555555;
-      --focus-ring: #ffd700;
-      --error: #cf6679;
-      --success: #03dac6;
-    }
-    [data-theme="light"] {
-      --bg: #f5f7fa;
-      --surface: #ffffff;
-      --surface-variant: #eef2f6;
-      --card: #ffffff;
-      --card-border: #d0d7de;
-      --text: #111827;
-      --text-muted: #4b5563;
-      --primary: #b27b00;
-      --primary-text: #ffffff;
-      --primary-btn: #0969da;
-      --primary-btn-text: #ffffff;
-      --secondary: #0969da;
-      --border: #6b7280;
-      --focus-ring: #0969da;
-      --error: #cf222e;
-      --success: #1a7f37;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    body {
-      background-color: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      line-height: 1.5;
-      font-size: 16px;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow-x: hidden;
-    }
-
-    /* Screen Reader Accessibility Helper */
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-
-    /* Screen Curtain Privacy Feature */
-    #screenCurtain {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: #000000;
-      z-index: 999999;
-    }
-
-    /* Android Mobile Top App Bar */
-    header.mobile-app-bar {
-      background: var(--surface);
-      border-bottom: 2px solid var(--border);
-      padding: 8px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      height: 60px;
-    }
-
-    .app-title-box {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      overflow: hidden;
-    }
-
-    .app-brand {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--primary);
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
-    }
-
-    .header-controls {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-
-    /* High Accessibility Touch Targets (>= 48x48 dp) */
-    .touch-target {
-      min-width: 48px;
-      min-height: 48px;
-      border-radius: 8px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      border: 1.5px solid var(--border);
-      background: var(--surface-variant);
-      color: var(--text);
-      font-size: 1.1rem;
-      font-weight: bold;
-    }
-
-    .touch-target:active {
-      transform: scale(0.96);
-    }
-
-    /* Full-Screen Drawer Menu for Android Mobile */
-    #sideDrawer {
-      position: fixed;
-      top: 0;
-      left: -100vw;
-      width: 82vw;
-      max-width: 320px;
-      height: 100vh;
-      background: var(--surface);
-      border-right: 2px solid var(--border);
-      z-index: 10000;
-      transition: left 0.25s cubic-bezier(0, 0, 0.2, 1);
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-      padding: 16px 12px;
-    }
-
-    #sideDrawer.open {
-      left: 0;
-    }
-
-    .drawer-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.75);
-      z-index: 9999;
-    }
-
-    .drawer-overlay.active {
-      display: block;
-    }
-
-    .drawer-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--card-border);
-      margin-bottom: 12px;
-    }
-
-    .drawer-category-label {
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
-      margin: 14px 4px 6px 4px;
-    }
-
-    .drawer-nav-btn {
-      min-height: 48px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 8px 12px;
-      background: transparent;
-      color: var(--text);
-      border: 1px solid transparent;
-      border-radius: 8px;
-      text-align: left;
-      font-size: 0.95rem;
-      font-weight: 500;
-      width: 100%;
-      cursor: pointer;
-    }
-
-    .drawer-nav-btn:active, .drawer-nav-btn.active {
-      background: var(--surface-variant);
-      border-color: var(--primary);
-      color: var(--primary);
-      font-weight: 700;
-    }
-
-    /* Content Area */
-    main.mobile-viewport {
-      flex: 1;
-      padding: 14px;
-      padding-bottom: 90px;
-      width: 100%;
-      max-width: 100vw;
-      overflow-x: hidden;
-    }
-
-    .view-panel {
-      display: none;
-    }
-
-    .view-panel.active {
-      display: block;
-    }
-
-    h1 {
-      font-size: 1.35rem;
-      color: var(--primary);
-      margin-bottom: 10px;
-      font-weight: 700;
-    }
-
-    h2 {
-      font-size: 1.15rem;
-      color: var(--text);
-      margin-bottom: 8px;
-      font-weight: 600;
-    }
-
-    p.lead-desc {
-      color: var(--text-muted);
-      font-size: 0.92rem;
-      margin-bottom: 16px;
-    }
-
-    /* Card Components */
-    .mobile-card {
-      background: var(--card);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 14px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-    }
-
-    .action-card-btn {
-      width: 100%;
-      text-align: left;
-      background: var(--card);
-      border: 1.5px solid var(--card-border);
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 12px;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .action-card-btn:active {
-      border-color: var(--primary);
-      background: var(--surface-variant);
-    }
-
-    .action-card-btn h2 {
-      color: var(--primary);
-      font-size: 1.05rem;
-      margin-bottom: 0;
-    }
-
-    .action-card-btn p {
-      color: var(--text-muted);
-      font-size: 0.88rem;
-    }
-
-    /* Form Fields */
-    .form-group {
-      margin-bottom: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    label {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    input, select, textarea {
-      min-height: 48px;
-      padding: 10px 12px;
-      font-size: 1rem;
-      border: 1.5px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      border-radius: 8px;
-      width: 100%;
-      font-family: inherit;
-    }
-
-    /* Buttons */
-    .btn {
-      min-height: 48px;
-      padding: 12px 16px;
-      font-size: 0.98rem;
-      font-weight: 700;
-      border-radius: 8px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      border: 1.5px solid var(--border);
-      background: var(--primary-btn);
-      color: var(--primary-btn-text);
-      width: 100%;
-      margin: 4px 0;
-    }
-
-    .btn:active {
-      filter: brightness(1.2);
-    }
-
-    .btn-secondary {
-      background: var(--surface-variant);
-      color: var(--text);
-      border-color: var(--card-border);
-    }
-
-    .btn-danger {
-      background: var(--error);
-      color: #ffffff;
-      border-color: #ffffff;
-    }
-
-    /* Output Console Container */
-    .output-container {
-      background: var(--surface-variant);
-      border: 1.5px solid var(--card-border);
-      border-radius: 8px;
-      padding: 12px;
-      margin-top: 10px;
-      white-space: pre-wrap;
-      font-family: monospace;
-      font-size: 0.95rem;
-      word-break: break-word;
-    }
-
-    /* Tabs Bar */
-    .mobile-tabs {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 14px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-    }
-
-    .tab-pill {
-      min-height: 48px;
-      padding: 0 16px;
-      border-radius: 8px;
-      background: var(--surface);
-      color: var(--text);
-      border: 1px solid var(--card-border);
-      font-weight: 600;
-      white-space: nowrap;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .tab-pill.active {
-      background: var(--primary);
-      color: var(--primary-text);
-      border-color: var(--primary);
-    }
-
-    /* Bottom Navigation Bar for Mobile Phones */
-    nav.mobile-bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100vw;
-      background: var(--surface);
-      border-top: 2px solid var(--border);
-      display: flex;
-      justify-content: space-around;
-      padding: 4px 0;
-      z-index: 1000;
-      height: 64px;
-    }
-
-    .bottom-tab-btn {
-      flex: 1;
-      height: 100%;
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.72rem;
-      font-weight: 600;
-      cursor: pointer;
-      gap: 2px;
-    }
-
-    .bottom-tab-btn.active {
-      color: var(--primary);
-      font-weight: 700;
-    }
-
-    /* Floating Voice Command Button (Touch Assisted) */
-    .mobile-fab-voice {
-      position: fixed;
-      bottom: 74px;
-      right: 16px;
-      width: 58px;
-      height: 58px;
-      border-radius: 50%;
-      background: var(--primary);
-      color: var(--primary-text);
-      border: 3px solid #000000;
-      font-size: 1.5rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1001;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-    }
-
-    .mobile-fab-voice:active {
-      transform: scale(0.92);
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Blind Tech Foundation</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+<style>
+:root{
+  --bg:#000; --amber:#ffb800; --amber-dim:#7a5c00; --text:#fff; --panel:#0d0d0d; --focus:#ffe066;
+}
+[data-theme="light"]{ --bg:#fff; --text:#000; --panel:#f2f2f2; --amber-dim:#c99700; }
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  font-size:1.05rem; line-height:1.5; padding-bottom:env(safe-area-inset-bottom,0px);}
+header{position:sticky; top:0; z-index:20; background:var(--bg); border-bottom:3px solid var(--amber);
+  padding:10px 12px; padding-top:calc(10px + env(safe-area-inset-top,0px));}
+.topRow{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+h1{color:var(--amber); font-size:1.15rem; margin:0; flex:1;}
+.iconBtn{background:transparent; border:2px solid var(--amber); color:var(--amber); border-radius:8px;
+  min-width:48px; min-height:48px; font-size:1.2rem; cursor:pointer;}
+#searchBar{width:100%; margin-top:8px; padding:12px; min-height:48px; border-radius:8px; border:2px solid var(--amber-dim);
+  background:var(--panel); color:var(--text); font-size:1rem;}
+main{max-width:760px; margin:0 auto; padding:12px; padding-bottom:90px;}
+.tabPanel{display:none;}
+.tabPanel.active{display:block;}
+section{background:var(--panel); border:2px solid var(--amber-dim); border-radius:10px; padding:14px; margin-bottom:16px;}
+section h2{color:var(--amber); font-size:1.05rem; margin:0 0 8px;}
+section h3{color:var(--amber); font-size:0.95rem; margin:14px 0 6px;}
+p.note{font-size:0.85rem; color:#aaa; margin:4px 0 8px;}
+label{display:block; margin:8px 0 4px; font-weight:600; font-size:0.9rem;}
+textarea, select, input[type=text], input[type=number], input[type=date]{
+  width:100%; background:#1a1a1a; color:#fff; border:2px solid var(--amber-dim); border-radius:8px;
+  padding:10px; font-size:1rem; min-height:48px;}
+[data-theme="light"] textarea,[data-theme="light"] select,[data-theme="light"] input{background:#fff; color:#000;}
+textarea{min-height:90px; resize:vertical;}
+button{background:var(--amber); color:#000; border:none; border-radius:8px; font-weight:700; font-size:0.95rem;
+  min-height:48px; padding:10px 14px; margin:5px 5px 0 0; cursor:pointer;}
+button:disabled{background:#555; color:#aaa;}
+button:focus-visible, a:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-visible{
+  outline:3px solid var(--focus); outline-offset:2px;}
+.row{display:flex; flex-wrap:wrap; gap:6px; align-items:center;}
+.status{margin-top:8px; color:#ffd966; font-size:0.9rem; min-height:1.3em;}
+.reading{font-size:1.15rem; padding:10px; background:#111; border-radius:8px;}
+[data-theme="light"] .reading{background:#eee;}
+.reading mark{background:var(--amber); color:#000; border-radius:3px;}
+#camPreview, #camCanvas{width:100%; border-radius:8px; border:2px solid var(--amber-dim); display:none; margin-top:8px;}
+.card{display:block; width:100%; text-align:left; background:#161616; border:2px solid var(--amber-dim); border-radius:10px;
+  padding:14px; margin-bottom:10px; color:var(--text); min-height:56px;}
+[data-theme="light"] .card{background:#eee;}
+.grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+ul.list{list-style:none; padding:0; margin:8px 0 0;}
+ul.list li{background:#1a1a1a; border-left:4px solid var(--amber); padding:8px; margin-bottom:6px; border-radius:4px; font-size:0.92rem;}
+[data-theme="light"] ul.list li{background:#eee;}
+nav#bottomNav{position:fixed; bottom:0; left:0; right:0; display:flex; background:var(--bg); border-top:3px solid var(--amber);
+  z-index:20; padding-bottom:env(safe-area-inset-bottom,0px);}
+nav#bottomNav button{flex:1; background:transparent; color:var(--text); border-radius:0; min-height:56px; font-size:0.75rem;
+  margin:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;}
+nav#bottomNav button[aria-current="page"]{color:var(--amber); border-top:3px solid var(--amber);}
+#drawer{position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:30; display:none;}
+#drawer.open{display:block;}
+#drawerPanel{background:var(--panel); width:82%; max-width:320px; height:100%; padding:16px; overflow-y:auto;}
+#drawerPanel h2{color:var(--amber);}
+#drawerPanel button{display:block; width:100%; text-align:left; background:transparent; color:var(--text);
+  border:none; border-bottom:1px solid #333; border-radius:0; padding:12px 4px;}
+.visually-hidden{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);}
+.modal{position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:40; display:none; align-items:center; justify-content:center; padding:16px;}
+.modal.open{display:flex;}
+.modalBox{background:var(--panel); border:2px solid var(--amber); border-radius:12px; padding:20px; max-width:400px;}
+</style>
 </head>
-<body>
-  <!-- Live Accessibility Region for TalkBack Readouts -->
-  <div id="liveAnnouncer" class="sr-only" aria-live="assertive"></div>
-  
-  <!-- Screen Curtain Privacy Mode -->
-  <div id="screenCurtain" aria-hidden="true"></div>
+<body data-theme="dark">
+<div aria-live="polite" class="visually-hidden" id="liveRegion"></div>
 
-  <!-- Navigation Drawer Backdrop -->
-  <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer(false)"></div>
+<header>
+  <div class="topRow">
+    <button class="iconBtn" id="drawerBtn" aria-label="Open navigation menu">â˜°</button>
+    <h1>Blind Tech Foundation</h1>
+    <button class="iconBtn" id="themeBtn" aria-label="Cycle theme: dark, light, high contrast">ðŸŒ“</button>
+    <button class="iconBtn" id="voiceSearchBtn" aria-label="Voice search / command">ðŸŽ¤</button>
+  </div>
+  <input type="text" id="searchBar" placeholder="Search tools (e.g. EMI, banking, notes)" aria-label="Search tools">
+</header>
 
-  <!-- Full Android Touch Navigation Drawer -->
-  <aside id="sideDrawer" role="dialog" aria-label="Main Application Menu">
-    <div class="drawer-header">
-      <h2 style="font-size: 1.15rem; color: var(--primary);">Blind Tech OS</h2>
-      <button class="touch-target" onclick="toggleDrawer(false)" aria-label="Close menu">✕</button>
+<div id="drawer" role="dialog" aria-modal="true" aria-label="Navigation menu">
+  <div id="drawerPanel">
+    <h2>Menu</h2>
+    <button data-tab="home">Home Dashboard</button>
+    <button data-tab="ai">AI &amp; Assistive Tools</button>
+    <button data-tab="finance">Finance &amp; Banking</button>
+    <button data-tab="education">Education &amp; Study</button>
+    <button data-tab="vault">Vault &amp; Community</button>
+    <button id="drawerClose">Close Menu</button>
+  </div>
+</div>
+
+<div class="modal" id="sosModal" role="alertdialog" aria-modal="true" aria-labelledby="sosTitle">
+  <div class="modalBox">
+    <h2 id="sosTitle">Confirm Emergency Call</h2>
+    <p>This will open your phone dialer to call your saved emergency contact. Continue?</p>
+    <div class="row">
+      <button id="sosConfirm">Yes, Call Now</button>
+      <button id="sosCancel">Cancel</button>
     </div>
+  </div>
+</div>
 
-    <nav style="display:flex; flex-direction:column;">
-      <button class="drawer-nav-btn active" id="dnav-home" onclick="navigate('home')">🏠 Home Hub</button>
-
-      <div class="drawer-category-label">TOOLS</div>
-      <button class="drawer-nav-btn" id="dnav-needs" onclick="navigate('needs')">✨ Needs Advisor</button>
-      <button class="drawer-nav-btn" id="dnav-ask" onclick="navigate('ask')">💬 Ask a Question</button>
-      <button class="drawer-nav-btn" id="dnav-troubleshoot" onclick="navigate('troubleshoot')">⚙️ Troubleshoot</button>
-      <button class="drawer-nav-btn" id="dnav-ocr" onclick="navigate('ocr')">👁️ OCR Hub</button>
-      <button class="drawer-nav-btn" id="dnav-reading" onclick="navigate('reading')">📖 Reading Hub</button>
-      <button class="drawer-nav-btn" id="dnav-ide" onclick="navigate('ide')">&lt;&gt; Code IDE</button>
-      <button class="drawer-nav-btn" id="dnav-banking" onclick="navigate('banking')">🏦 Banking</button>
-      <button class="drawer-nav-btn" id="dnav-finance" onclick="navigate('finance')">₹ Finance</button>
-      <button class="drawer-nav-btn" id="dnav-education" onclick="navigate('education')">🎓 Education Hub</button>
-      <button class="drawer-nav-btn" id="dnav-study" onclick="navigate('study')">📚 Study Tools</button>
-      <button class="drawer-nav-btn" id="dnav-navigation" onclick="navigate('navigation')">🧭 Navigation</button>
-      <button class="drawer-nav-btn" id="dnav-health" onclick="navigate('health')">❤️ Health & SOS</button>
-      <button class="drawer-nav-btn" id="dnav-daily" onclick="navigate('daily')">✓ Daily Tasks</button>
-      <button class="drawer-nav-btn" id="dnav-agriculture" onclick="navigate('agriculture')">🌾 Agriculture</button>
-      <button class="drawer-nav-btn" id="dnav-legal" onclick="navigate('legal')">⚖️ Legal & Govt</button>
-
-      <div class="drawer-category-label">MEDIA</div>
-      <button class="drawer-nav-btn" id="dnav-audio-editor" onclick="navigate('audio-editor')">🎙️ Audio Editor</button>
-      <button class="drawer-nav-btn" id="dnav-video-editor" onclick="navigate('video-editor')">🎬 Video Editor</button>
-
-      <div class="drawer-category-label">CONTENT</div>
-      <button class="drawer-nav-btn" id="dnav-articles" onclick="navigate('articles')">📄 Articles</button>
-      <button class="drawer-nav-btn" id="dnav-news" onclick="navigate('news')">📰 News</button>
-
-      <div class="drawer-category-label">SOFTWARE</div>
-      <button class="drawer-nav-btn" id="dnav-vault" onclick="navigate('vault')">📥 Software Vault</button>
-      <button class="drawer-nav-btn" id="dnav-backup" onclick="navigate('backup')">🗄️ Backup & Restore</button>
-      <button class="drawer-nav-btn" id="dnav-updates" onclick="navigate('updates')">🔄 App Updates</button>
-
-      <div class="drawer-category-label">COMMUNITY</div>
-      <button class="drawer-nav-btn" id="dnav-community" onclick="navigate('community')">👥 Community</button>
-      <button class="drawer-nav-btn" id="dnav-report" onclick="navigate('report')">⚠️ Report a Problem</button>
-    </nav>
-  </aside>
-
-  <!-- Mobile Top Bar -->
-  <header class="mobile-app-bar">
-    <div class="app-title-box">
-      <button class="touch-target" onclick="toggleDrawer(true)" aria-label="Open Navigation Menu">☰</button>
-      <span class="app-brand" id="currentScreenTitle">Home Hub</span>
+<main>
+  <!-- HOME -->
+  <section class="tabPanel active" id="tab-home" aria-labelledby="homeH">
+    <h2 id="homeH">Home Dashboard</h2>
+    <p class="note" id="announcement">Announcement: Everything on this page runs offline in your browser. Nothing is uploaded anywhere.</p>
+    <div class="grid">
+      <button class="card" data-goto="ai">ðŸ”Ž OCR / Camera</button>
+      <button class="card" data-goto="ai">ðŸ“– Reading Hub</button>
+      <button class="card" data-goto="finance">ðŸ’° EMI Calculator</button>
+      <button class="card" data-goto="finance">ðŸ¦ Banking Assistant</button>
+      <button class="card" data-goto="education">ðŸ“š Study Tools</button>
+      <button class="card" data-goto="vault">âœ… Daily Tasks</button>
     </div>
-    <div class="header-controls">
-      <button class="touch-target" onclick="cycleTheme()" aria-label="Toggle Visual Theme">🎨</button>
-      <button class="touch-target" onclick="toggleScreenCurtain()" aria-label="Toggle Screen Curtain">🕶️</button>
-      <button class="touch-target" onclick="stopAllSpeech()" aria-label="Stop all audio">⏹️</button>
+    <h3>Recent Activity</h3>
+    <ul class="list" id="recentList"><li>No activity yet.</li></ul>
+  </section>
+
+  <!-- AI & ASSISTIVE TOOLS -->
+  <section class="tabPanel" id="tab-ai" aria-labelledby="aiH">
+    <h2 id="aiH">AI &amp; Assistive Tools</h2>
+
+    <h3>ðŸ”Š Text to Speech / Reading Hub</h3>
+    <label for="ttsInput">Text to read</label>
+    <textarea id="ttsInput">Welcome to the Blind Tech Foundation. This reads text aloud and highlights each word.</textarea>
+    <label for="fileImport">Or import a .txt/.md/.csv/.html file</label>
+    <input type="file" id="fileImport" accept=".txt,.md,.csv,.html,.htm">
+    <div class="row">
+      <select id="voiceSelect"></select>
+      <input type="number" id="rateInput" min="0.5" max="2.5" step="0.1" value="1" aria-label="Speech rate">
     </div>
-  </header>
+    <div class="row">
+      <button id="ttsPlay">Play</button><button id="ttsPause">Pause</button>
+      <button id="ttsResume">Resume</button><button id="ttsSkip">Skip Sentence</button>
+      <button id="ttsRewind">Rewind Sentence</button><button id="ttsStop">Stop</button>
+    </div>
+    <div class="reading" id="readingDisplay">Highlighted text appears here while playing.</div>
+    <div class="status" id="ttsStatus" role="status"></div>
+    <p class="note">Note: only your device's built-in text-to-speech voices are available offline. A "neural voice" option is not shown because no neural voice service is connected â€” connecting one requires a backend API key.</p>
 
-  <!-- Main Viewport Area -->
-  <main class="mobile-viewport">
+    <h3>ðŸŽ™ï¸ Voice Typing (Speech to Text)</h3>
+    <div class="row"><button id="sttStart">Start</button><button id="sttStop2">Stop</button><button id="sttClear">Clear</button></div>
+    <textarea id="sttOutput" aria-label="Transcribed text"></textarea>
+    <div class="status" id="sttStatus" role="status"></div>
 
-    <!-- 1. Home Hub -->
-    <section id="view-home" class="view-panel active" aria-labelledby="h-home">
-      <h1 id="h-home">Tools & Assistive Hubs</h1>
-      <p class="lead-desc">Select any tool below to launch its dedicated accessibility module.</p>
+    <h3>ðŸ“· OCR Hub â€” Camera Capture</h3>
+    <p class="note">This captures a photo and lets you save it. Automatic text extraction (OCR) and AI scene description are not included offline â€” they need a cloud OCR/vision service configured with an API key. Wire your key into the <code>runOcr()</code> stub in the code to enable them.</p>
+    <div class="row">
+      <button id="camStart">Open Camera</button><button id="camShot">Take Photo</button><button id="camStop">Close</button>
+      <a id="camDownload" href="#" download="photo.png" style="display:none;"><button type="button">Download</button></a>
+    </div>
+    <video id="camPreview" autoplay playsinline aria-label="Camera preview"></video>
+    <canvas id="camCanvas" aria-label="Captured photo"></canvas>
+    <div class="status" id="camStatus" role="status"></div>
 
-      <button class="action-card-btn" onclick="navigate('study')">
-        <h2>📚 Study Tools & Summarizer</h2>
-        <p>Summarise texts, generate practice Q&A, and listen to continuous audio.</p>
-      </button>
+    <h3>ðŸ§­ Navigation Assistant</h3>
+    <div class="row"><button id="locBtn">Get My Location</button></div>
+    <div class="status" id="locStatus" role="status"></div>
+    <p class="note">Shows GPS coordinates. Turning coordinates into a spoken street address or nearby-places list needs a maps/geocoding API (e.g. Google or Mapbox) â€” not included offline.</p>
 
-      <button class="action-card-btn" onclick="navigate('ocr')">
-        <h2>👁️ Advanced OCR Hub</h2>
-        <p>Extract text from pictures, camera snapshots, or listen to scene analysis.</p>
-      </button>
+    <h3>ðŸ§­ Needs Advisor</h3>
+    <p class="note">Rule-based suggestion â€” not AI. Picks a tool from your answer using fixed logic.</p>
+    <label for="advisorNeed">What do you need help with?</label>
+    <select id="advisorNeed">
+      <option value="">-- Select --</option>
+      <option value="read">Reading a document or book</option>
+      <option value="write">Writing text quickly</option>
+      <option value="money">Managing money or a loan</option>
+      <option value="study">Studying for an exam</option>
+      <option value="find">Finding my way somewhere</option>
+      <option value="emergency">An emergency situation</option>
+    </select>
+    <div class="row"><button id="advisorGo">Suggest a Tool</button></div>
+    <div class="status" id="advisorStatus" role="status" aria-live="polite"></div>
 
-      <button class="action-card-btn" onclick="navigate('reading')">
-        <h2>📖 Universal Reading Hub</h2>
-        <p>Full document viewer with play, pause, resume, skip, and rewind controls.</p>
-      </button>
+    <h3>â“ Ask a Question / Troubleshoot</h3>
+    <p class="note">Searches a small built-in help list (device/app issues only) â€” not an AI answer engine.</p>
+    <label for="faqInput">Type your question or issue</label>
+    <input type="text" id="faqInput" placeholder="e.g. TalkBack not reading screen">
+    <div class="row"><button id="faqSearch">Search Help</button></div>
+    <div class="status" id="faqStatus" role="status" aria-live="polite"></div>
+    <ul class="list" id="faqResults"></ul>
 
-      <button class="action-card-btn" onclick="navigate('banking')">
-        <h2>🏦 Banking Assistant</h2>
-        <p>Voice-prompted transaction form with digit confirmations and INR readout.</p>
-      </button>
+    <h3>ðŸ’» Accessible Code Editor</h3>
+    <div class="row">
+      <select id="codeLang" aria-label="Language">
+        <option value="js">JavaScript (runs in-browser)</option>
+        <option value="py">Python (needs backend)</option>
+        <option value="html">HTML (renders preview)</option>
+        <option value="cpp">C++ (needs backend)</option>
+      </select>
+    </div>
+    <textarea id="codeInput" aria-label="Code editor" style="font-family:monospace;">console.log("Hello Blind Tech Foundation");</textarea>
+    <div class="row"><button id="codeRun">Run</button><button id="codeCopy">Copy Code</button></div>
+    <div class="status" id="codeStatus" role="status"></div>
+    <p class="note">Only JavaScript actually executes here (safely, in-browser). Python and C++ require a server-side sandbox â€” this UI is wired up but calls a placeholder until you connect one.</p>
+  </section>
 
-      <button class="action-card-btn" onclick="navigate('finance')">
-        <h2>₹ Finance & Money Tools</h2>
-        <p>Accurate EMI loan calculator, SIP wealth planner, and persistent expenses.</p>
-      </button>
+  <!-- FINANCE & BANKING -->
+  <section class="tabPanel" id="tab-finance" aria-labelledby="finH">
+    <h2 id="finH">Finance &amp; Banking</h2>
 
-      <button class="action-card-btn" onclick="navigate('education')">
-        <h2>🎓 Competitive Exam Hub</h2>
-        <p>UPSC, SSC, Banking, and UGC NET preparation tracks with audio Q&A.</p>
-      </button>
+    <h3>EMI Calculator</h3>
+    <label for="emiP">Loan Amount (â‚¹)</label><input type="number" id="emiP" value="500000">
+    <label for="emiR">Annual Interest Rate (%)</label><input type="number" id="emiR" value="9" step="0.1">
+    <label for="emiT">Tenure (years)</label><input type="number" id="emiT" value="5">
+    <div class="row"><button id="emiCalc">Calculate &amp; Announce</button></div>
+    <div class="status" id="emiStatus" role="status" aria-live="polite"></div>
 
-      <button class="action-card-btn" onclick="navigate('health')">
-        <h2>❤️ Health & Emergency SOS</h2>
-        <p>Medication scheduler with safety-verified 112 emergency calling.</p>
-      </button>
-    </section>
+    <h3>SIP Planner</h3>
+    <label for="sipM">Monthly Investment (â‚¹)</label><input type="number" id="sipM" value="5000">
+    <label for="sipR">Expected Annual Return (%)</label><input type="number" id="sipR" value="12" step="0.1">
+    <label for="sipY">Duration (years)</label><input type="number" id="sipY" value="10">
+    <div class="row"><button id="sipCalc">Calculate &amp; Announce</button></div>
+    <div class="status" id="sipStatus" role="status" aria-live="polite"></div>
 
-    <!-- 2. Needs Advisor -->
-    <section id="view-needs" class="view-panel">
-      <h1>Accessibility Needs Advisor</h1>
-      <p class="lead-desc">Describe your assistive needs and receive matching tool recommendations.</p>
-      <div class="mobile-card">
-        <div class="form-group">
-          <label for="needsInput">Your Accessibility Goal</label>
-          <input type="text" id="needsInput" placeholder="e.g. Read paper documents, prepare for exams" />
-        </div>
-        <button class="btn" onclick="adviseNeeds()">Get Tool Recommendations</button>
-      </div>
-      <div id="needsOutput" class="output-container" style="display:none;" tabindex="0"></div>
-    </section>
-
-    <!-- 3. Ask a Question -->
-    <section id="view-ask" class="view-panel">
-      <h1>Ask About Tools</h1>
-      <p class="lead-desc">Ask how to operate any feature or service in Blind Tech Foundation.</p>
-      <div class="mobile-card">
-        <div class="form-group">
-          <label for="askInput">Enter Question</label>
-          <input type="text" id="askInput" placeholder="e.g. How do I use the OCR reader?" />
-        </div>
-        <button class="btn" onclick="answerQuestion()">Get Answer & Listen</button>
-      </div>
-      <div id="askOutput" class="output-container" style="display:none;" tabindex="0"></div>
-    </section>
-
-    <!-- 4. Troubleshoot -->
-    <section id="view-troubleshoot" class="view-panel">
-      <h1>System Diagnostics & Troubleshoot</h1>
-      <div class="mobile-card">
-        <button class="btn" onclick="runDiagnostics()">Run Android System Diagnostics</button>
-      </div>
-      <div id="diagOutput" class="output-container" style="display:none;" tabindex="0"></div>
-    </section>
-
-    <!-- 5. OCR Hub -->
-    <section id="view-ocr" class="view-panel">
-      <h1>Advanced OCR Hub</h1>
-      <p class="lead-desc">Extract text from Android camera captures or storage photos.</p>
-      <div class="mobile-card">
-        <div class="form-group">
-          <label for="ocrLang">Recognition Language</label>
-          <select id="ocrLang">
-            <option value="eng">English</option>
-            <option value="hin">Hindi</option>
-            <option value="tam">Tamil</option>
-            <option v
+    <h3>Expense Tracker</h3>
+    <label for="expCat">Category</label>
+    <select id="expCat"><option>Food</option><option
