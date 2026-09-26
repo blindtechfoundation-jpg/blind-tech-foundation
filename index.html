@@ -1,36 +1,564 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="high-contrast">
-<head>  
-<meta charset="UTF-8" />  
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />  
-<title>Blind Tech Foundation</title>  
-<style>
-    :root {      
---bg: #000000;      
---surface: #121212;      
---surface-variant: #1e1e1e;      
---card: #181818;      
---text: #ffffff;      
---text-muted: #e0e0e0;      
---primary: #ffd700;      
---primary-text: #000000;      
---secondary: #00ffff;      
---border: #ffd700;      
---focus-ring: #00ffff;      
---error: #ff4d4d;      
---success: #00ff66;    
-}    
-[data-theme="dark"] {      
---bg: #121212;      
---surface: #1e1e1e;      
---surface-variant: #282828;      
---card: #242424;      
---text: #f0f0f0;      
---text-muted: #b0b0b0;      
---primary: #ffd700;      
---primary-text: #121212;      
---secondary: #80d8ff;      
---border: #555555;      
---focus-ring: #ffd700;      
---error: #cf6679;      
---success: #03dac6;
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+  <meta name="description" content="Blind Tech Foundation - Accessible application suite for visually impaired users." />
+  <meta name="theme-color" content="#ffd700" />
+  
+  <!-- Inline Web App Manifest (No separate manifest.json needed) -->
+  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Blind%20Tech%20Foundation%22%2C%22short_name%22%3A%22BlindTech%22%2C%22start_url%22%3A%22.%2Findex.html%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23000000%22%2C%22theme_color%22%3A%22%23ffd700%22%7D" />
+
+  <title>Blind Tech Foundation</title>
+  <style>
+    :root {
+      --bg: #000000;
+      --surface: #121212;
+      --surface-variant: #1e1e1e;
+      --card: #181818;
+      --text: #ffffff;
+      --text-muted: #e0e0e0;
+      --primary: #ffd700;
+      --primary-text: #000000;
+      --secondary: #00ffff;
+      --border: #ffd700;
+      --focus-ring: #00ffff;
+      --error: #ff4d4d;
+      --success: #00ff66;
+    }
+    [data-theme="dark"] {
+      --bg: #121212;
+      --surface: #1e1e1e;
+      --surface-variant: #282828;
+      --card: #242424;
+      --text: #f0f0f0;
+      --text-muted: #b0b0b0;
+      --primary: #ffd700;
+      --primary-text: #121212;
+      --secondary: #80d8ff;
+      --border: #555555;
+      --focus-ring: #ffd700;
+      --error: #cf6679;
+      --success: #03dac6;
+    }
+    [data-theme="light"] {
+      --bg: #f8f9fa;
+      --surface: #ffffff;
+      --surface-variant: #f1f3f4;
+      --card: #ffffff;
+      --text: #121212;
+      --text-muted: #444444;
+      --primary: #b27b00;
+      --primary-text: #ffffff;
+      --secondary: #006699;
+      --border: #767676;
+      --focus-ring: #0056b3;
+      --error: #b00020;
+      --success: #007a33;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+      font-size: 18px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    *:focus-visible {
+      outline: 4px solid var(--focus-ring) !important;
+      outline-offset: 3px !important;
+    }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    #screenCurtain {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #000000;
+      z-index: 99999;
+    }
+    header.app-bar {
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      gap: 10px;
+    }
+    .app-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .header-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .icon-btn {
+      min-width: 48px;
+      min-height: 48px;
+      background: var(--surface-variant);
+      color: var(--text);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 10px;
+    }
+    .icon-btn:hover {
+      background: var(--primary);
+      color: var(--primary-text);
+    }
+    #sideDrawer {
+      position: fixed;
+      top: 0;
+      left: -330px;
+      width: 310px;
+      height: 100vh;
+      background: var(--surface);
+      border-right: 3px solid var(--border);
+      z-index: 10000;
+      transition: left 0.25s ease-in-out;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 16px;
+    }
+    #sideDrawer.open {
+      left: 0;
+    }
+    .drawer-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 9999;
+    }
+    .drawer-overlay.active {
+      display: block;
+    }
+    .drawer-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 14px;
+    }
+    .drawer-link {
+      min-height: 48px;
+      background: var(--surface-variant);
+      color: var(--text);
+      border: 2px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 0.95rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .drawer-link:hover {
+      background: var(--primary);
+      color: var(--primary-text);
+    }
+    main {
+      flex: 1;
+      padding: 16px;
+      padding-bottom: 96px;
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .view-panel {
+      display: none;
+    }
+    .view-panel.active {
+      display: block;
+    }
+    h1, h2, h3 {
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+    .card {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .action-card {
+      cursor: pointer;
+      display: block;
+      width: 100%;
+      text-align: left;
+      min-height: 64px;
+    }
+    .action-card:hover {
+      background: var(--surface-variant);
+      border-color: var(--secondary);
+    }
+    .btn {
+      min-height: 48px;
+      min-width: 48px;
+      padding: 12px 18px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 2px solid var(--border);
+      background: var(--primary);
+      color: var(--primary-text);
+      margin: 4px 0;
+    }
+    .btn-secondary {
+      background: var(--surface-variant);
+      color: var(--text);
+    }
+    .form-group {
+      margin-bottom: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    label {
+      font-weight: 600;
+      color: var(--text);
+    }
+    input, select, textarea {
+      min-height: 48px;
+      padding: 10px 12px;
+      font-size: 1.05rem;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 6px;
+      width: 100%;
+      font-family: inherit;
+    }
+    .tabs-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      flex: 1;
+      min-height: 48px;
+      padding: 8px 10px;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .tab-btn.active {
+      background: var(--primary);
+      color: var(--primary-text);
+    }
+    .output-box {
+      background: var(--surface-variant);
+      border: 2px solid var(--border);
+      padding: 14px;
+      border-radius: 6px;
+      margin-top: 10px;
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 1rem;
+    }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100vw;
+      background: var(--surface);
+      border-top: 3px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 4px;
+      z-index: 1000;
+    }
+    .nav-btn {
+      flex: 1;
+      min-height: 52px;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.82rem;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 6px;
+      gap: 2px;
+    }
+    .nav-btn.active {
+      background: var(--surface-variant);
+      color: var(--primary);
+      border: 2px solid var(--border);
+    }
+    .fab-voice {
+      position: fixed;
+      bottom: 74px;
+      right: 18px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: var(--primary-text);
+      border: 3px solid #000;
+      font-size: 1.6rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1001;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+  </style>
+</head>
+<body>
+  <div id="screenCurtain" aria-hidden="true"></div>
+  <div id="liveAnnouncer" class="sr-only" aria-live="assertive"></div>
+  <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer(false)"></div>
+
+  <div id="sideDrawer" role="dialog" aria-label="Main Navigation Menu">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h2 style="font-size: 1.25rem;">Foundation Tools</h2>
+      <button class="icon-btn" onclick="toggleDrawer(false)" aria-label="Close navigation menu">✕</button>
+    </div>
+    <nav class="drawer-nav">
+      <button class="drawer-link" onclick="navigate('home')">1. Home Dashboard</button>
+      <button class="drawer-link" onclick="navigate('ocr')">2. Advanced OCR Hub</button>
+      <button class="drawer-link" onclick="navigate('reading')">3. Universal Reading Hub</button>
+      <button class="drawer-link" onclick="navigate('ide')">4. Accessible Code IDE</button>
+      <button class="drawer-link" onclick="navigate('banking')">5. Banking Tools</button>
+      <button class="drawer-link" onclick="navigate('finance')">6. Finance & Money Tools</button>
+      <button class="drawer-link" onclick="navigate('education')">7. Education & Exam Hub</button>
+      <button class="drawer-link" onclick="navigate('study')">8. Study Tools & Summarizer</button>
+      <button class="drawer-link" onclick="navigate('navigation')">9. Navigation Assistant</button>
+      <button class="drawer-link" onclick="navigate('health')">10. Health & Wellness</button>
+      <button class="drawer-link" onclick="navigate('daily')">11. Daily Tasks & Calculator</button>
+      <button class="drawer-link" onclick="navigate('agriculture')">12. Agriculture Assistant</button>
+      <button class="drawer-link" onclick="navigate('legal')">13. Legal & RPwD Schemes</button>
+      <button class="drawer-link" onclick="navigate('media')">14. Media Tools</button>
+      <button class="drawer-link" onclick="navigate('articles')">15. Articles & Tutorials</button>
+      <button class="drawer-link" onclick="navigate('news')">16. Daily News Feed</button>
+      <button class="drawer-link" onclick="navigate('vault')">17. Smart Software Vault</button>
+      <button class="drawer-link" onclick="navigate('community')">18. Community & Support</button>
+    </nav>
+  </div>
+
+  <header class="app-bar">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <button class="icon-btn" onclick="toggleDrawer(true)" aria-label="Open Navigation Drawer Menu">☰</button>
+      <span class="app-title">Blind Tech</span>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="cycleTheme()" aria-label="Switch Theme Mode">🎨</button>
+      <button class="icon-btn" onclick="toggleScreenCurtain()" aria-label="Toggle Screen Curtain">🕶️</button>
+      <button class="icon-btn" onclick="stopAllSpeech()" aria-label="Stop all audio">⏹️</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Screen 1: Home -->
+    <section id="view-home" class="view-panel active" aria-labelledby="h-home">
+      <h1 id="h-home">Quick Tools Access</h1>
+      <button class="card action-card" onclick="navigate('ocr')">
+        <h2>📷 Advanced OCR & Scene Hub</h2>
+        <p>Extract text from images, camera photos, or listen to AI scene descriptions.</p>
+      </button>
+      <button class="card action-card" onclick="navigate('reading')">
+        <h2>📖 Universal AI Reading Hub</h2>
+        <p>Document reader for TXT, PDF, MD, HTML, and CSV with audio speech controls.</p>
+      </button>
+      <button class="card action-card" onclick="navigate('banking')">
+        <h2>🏦 Banking Form Assistant</h2>
+        <p>Voice-prompted form with digit-by-digit verification and INR words readout.</p>
+      </button>
+      <button class="card action-card" onclick="navigate('finance')">
+        <h2>💰 Finance & Money Tools</h2>
+        <p>Loan EMI calculator, SIP investment planner, and daily expense tracker.</p>
+      </button>
+      <button class="card action-card" onclick="navigate('ide')">
+        <h2>💻 Accessible Code IDE</h2>
+        <p>Editor with spoken terminal output for Python, HTML, JS, and C++.</p>
+      </button>
+      <button class="card action-card" onclick="navigate('education')">
+        <h2>🎓 Competitive Exam Hub</h2>
+        <p>Curated prep modules for UPSC, SSC, Banking, and instant AI practice Q&A.</p>
+      </button>
+      <button class="card action-card" onclick="triggerSOS()">
+        <h2 style="color:var(--error);">🚨 Emergency SOS (112)</h2>
+        <p>Immediate shortcut to trigger national emergency assistance.</p>
+      </button>
+    </section>
+
+    <!-- Screen 2: OCR -->
+    <section id="view-ocr" class="view-panel" aria-labelledby="h-ocr">
+      <h1 id="h-ocr">Advanced OCR Hub</h1>
+      <div class="card">
+        <div class="form-group">
+          <label for="ocrFileInput">Select or Capture Image / Document</label>
+          <input type="file" id="ocrFileInput" accept="image/*,application/pdf" onchange="handleOCRFileUpload(event)" />
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn" onclick="executeOCRSimulation()">Process OCR (Alt+P)</button>
+          <button class="btn btn-secondary" onclick="describeSceneSimulation()">Describe Image Scene</button>
+        </div>
+      </div>
+      <div class="card">
+        <label for="ocrResultText">Extracted Editable Text</label>
+        <textarea id="ocrResultText" rows="6">Blind Tech Foundation: Empowering individuals with accessible, open-source technology.</textarea>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <button class="btn" onclick="speakText(document.getElementById('ocrResultText').value)">Read Aloud</button>
+          <button class="btn btn-secondary" onclick="copyToClipboard('ocrResultText')">Copy Text</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Screen 3: Universal Reading -->
+    <section id="view-reading" class="view-panel" aria-labelledby="h-reading">
+      <h1 id="h-reading">Universal Reading Hub</h1>
+      <div class="card">
+        <div class="form-group">
+          <label for="readerSpeed">Reading Speed: <span id="speedLabel">1.0x</span></label>
+          <input type="range" id="readerSpeed" min="0.5" max="2.5" step="0.25" value="1.0" oninput="updateSpeechRate(this.value)" />
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn" onclick="playDocumentSpeech()">Play Aloud (Alt+R)</button>
+          <button class="btn btn-secondary" onclick="stopAllSpeech()">Stop Audio</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="form-group">
+          <label for="readingFileInput">Import File (TXT, PDF, MD, HTML, CSV, JSON)</label>
+          <input type="file" id="readingFileInput" accept=".txt,.pdf,.md,.html,.csv,.json" onchange="handleDocumentImport(event)" />
+        </div>
+        <label for="readingDocumentText">Document Content</label>
+        <textarea id="readingDocumentText" rows="8">The Rights of Persons with Disabilities (RPwD) Act, 2016 guarantees equal opportunity, non-discrimination, and mandatory digital accessibility across all public consumer portals in India.</textarea>
+      </div>
+    </section>
+
+    <!-- Screen 4: Accessible IDE -->
+    <section id="view-ide" class="view-panel" aria-labelledby="h-ide">
+      <h1 id="h-ide">Accessible Code IDE</h1>
+      <div class="card">
+        <div class="form-group">
+          <label for="ideLang">Language Environment</label>
+          <select id="ideLang">
+            <option value="python">Python</option>
+            <option value="javascript">JavaScript</option>
+            <option value="html">HTML</option>
+            <option value="cpp">C++</option>
+          </select>
+        </div>
+        <label for="codeEditor">Source Code</label>
+        <textarea id="codeEditor" rows="7" style="font-family:monospace;">def greet():
+    return "Hello from Blind Tech Accessible IDE!"
+
+print(greet())</textarea>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <button class="btn" onclick="runCode()">Run Code (Alt+E)</button>
+          <button class="btn btn-secondary" onclick="document.getElementById('codeEditor').value=''; speakText('Code cleared.')">Clear</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Terminal Spoken Output</h2>
+        <div id="terminalOutput" class="output-box" tabindex="0">Terminal ready. Press "Run Code" to execute.</div>
+      </div>
+    </section>
+
+    <!-- Screen 5: Banking -->
+    <section id="view-banking" class="view-panel" aria-labelledby="h-banking">
+      <h1 id="h-banking">Accessible Banking Form</h1>
+      <div class="card">
+        <div class="form-group">
+          <label for="bName">Beneficiary Full Name</label>
+          <input type="text" id="bName" placeholder="Enter beneficiary name" />
+        </div>
+        <div class="form-group">
+          <label for="bAccount">Account Number (Digits Only)</label>
+          <input type="text" id="bAccount" inputmode="numeric" oninput="handleAccountInput(this)" placeholder="e.g. 1029384756" />
+        </div>
+        <div class="form-group">
+          <label for="bType">Transaction Type</label>
+          <select id="bType">
+            <option value="Deposit">Deposit</option>
+            <option value="Withdrawal">Withdrawal</option>
+            <option value="Transfer">Transfer</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="bAmount">Amount in ₹ (INR)</label>
+          <input type="number" id="bAmount" oninput="handleAmountInput(this.value)" placeholder="e.g. 5000" />
+          <div id="wordsOut" style="color:var(--primary); font-weight:bold; margin-top:4px;" aria-live="polite"></div>
+        </div>
+        <button class="btn" onclick="submitBankingForm()">Submit & Announce Summary (Alt+S)</button>
+      </div>
+      <div id="bankReceipt" class="card output-box" style="display:none;" tabindex="0"></div>
+    </section>
+
+    <!-- Screen 6: Finance -->
+    <section id="view-finance" class="view-panel" aria-labelledby="h-finance">
+      <h1 id="h-finance">Finance & Money Tools</h1>
+      <div class="tabs-bar" role="tablist">
+        <button class="tab-btn active" role="tab" onclick="switchFinTab('emi')">EMI Calculator</button>
+        <button class="tab-btn" role="tab" onclick="switchFinTab('sip')">SIP Planner</button>
+        <button class="tab-btn" role="tab" onclick="switchFinTab('exp')">Expense Tracker</button>
+      </div>
+
+      <div id="fin-emi" class="card">
+        <h2>EMI Calculator</h2>
+        <div class="form-group">
+          <label for="emiP">Principal Loan Amount (₹)</label>
+          <input type="number" id="emiP" value="500000" />
+        </div>
+        <div class="form-group">
+          <label for="emiR">Annual Interest Rate (%)</label>
+          <input type="number" step="0.1" id="emiR" value="8.5" />
+        </div>
+        <div class="form-group">
+          <label for="emiN">Tenure (Years)</label>
+          <input type="number" id="emiN" value="5" />
+        </div>
+        <button class="btn" onclick="calcEMI()">Calculate EMI (Alt+C)</button>
+        <div id="emiResult" class="output-box" style="d
