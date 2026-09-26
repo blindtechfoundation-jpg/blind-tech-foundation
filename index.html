@@ -3,13 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
-  <meta name="description" content="Blind Tech Foundation - Accessible application suite for visually impaired users." />
+  <meta name="description" content="Blind Tech Foundation - Accessible Application Suite for Visually Impaired Users." />
   <meta name="theme-color" content="#ffd700" />
-  
-  <!-- Inline Web App Manifest (No separate manifest.json needed) -->
   <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Blind%20Tech%20Foundation%22%2C%22short_name%22%3A%22BlindTech%22%2C%22start_url%22%3A%22.%2Findex.html%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23000000%22%2C%22theme_color%22%3A%22%23ffd700%22%7D" />
 
   <title>Blind Tech Foundation</title>
+
+  <!-- External Client Libraries for OCR and Client-side Python Execution -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.26.1/full/pyodide.js"></script>
+
   <style>
     :root {
       --bg: #000000;
@@ -36,7 +39,7 @@
       --primary: #ffd700;
       --primary-text: #121212;
       --secondary: #80d8ff;
-      --border: #555555;
+      --border: #666666;
       --focus-ring: #ffd700;
       --error: #cf6679;
       --success: #03dac6;
@@ -112,7 +115,6 @@
       font-size: 1.25rem;
       font-weight: 700;
       color: var(--primary);
-      text-decoration: none;
     }
     .header-actions {
       display: flex;
@@ -246,6 +248,11 @@
     .btn-secondary {
       background: var(--surface-variant);
       color: var(--text);
+    }
+    .btn-danger {
+      background: var(--error);
+      color: #ffffff;
+      border-color: #ffffff;
     }
     .form-group {
       margin-bottom: 14px;
@@ -393,69 +400,81 @@
     </div>
     <div class="header-actions">
       <button class="icon-btn" onclick="cycleTheme()" aria-label="Switch Theme Mode">🎨</button>
-      <button class="icon-btn" onclick="toggleScreenCurtain()" aria-label="Toggle Screen Curtain">🕶️</button>
-      <button class="icon-btn" onclick="stopAllSpeech()" aria-label="Stop all audio">⏹️</button>
+      <button class="icon-btn" onclick="toggleScreenCurtain()" aria-label="Toggle Screen Curtain Privacy Mode">🕶️</button>
+      <button class="icon-btn" onclick="stopAllSpeech()" aria-label="Stop all active audio and reading">⏹️</button>
     </div>
   </header>
 
   <main>
-    <!-- Screen 1: Home -->
+    <!-- Screen 1: Home Dashboard -->
     <section id="view-home" class="view-panel active" aria-labelledby="h-home">
       <h1 id="h-home">Quick Tools Access</h1>
       <button class="card action-card" onclick="navigate('ocr')">
         <h2>📷 Advanced OCR & Scene Hub</h2>
-        <p>Extract text from images, camera photos, or listen to AI scene descriptions.</p>
+        <p>Real-time optical character recognition, camera snapshot extraction, and image analysis.</p>
       </button>
       <button class="card action-card" onclick="navigate('reading')">
         <h2>📖 Universal AI Reading Hub</h2>
-        <p>Document reader for TXT, PDF, MD, HTML, and CSV with audio speech controls.</p>
+        <p>Accessible document reader with live play, pause, resume, skip, and rewind controls.</p>
       </button>
       <button class="card action-card" onclick="navigate('banking')">
         <h2>🏦 Banking Form Assistant</h2>
-        <p>Voice-prompted form with digit-by-digit verification and INR words readout.</p>
+        <p>Voice-guided banking form with digit confirmation and currency conversion.</p>
       </button>
       <button class="card action-card" onclick="navigate('finance')">
         <h2>💰 Finance & Money Tools</h2>
-        <p>Loan EMI calculator, SIP investment planner, and daily expense tracker.</p>
+        <p>Live EMI calculator, SIP compound maturity planner, and persistent expense tracker.</p>
       </button>
       <button class="card action-card" onclick="navigate('ide')">
         <h2>💻 Accessible Code IDE</h2>
-        <p>Editor with spoken terminal output for Python, HTML, JS, and C++.</p>
+        <p>In-browser code runner for Python, JavaScript, HTML, and C++ with spoken terminal execution.</p>
       </button>
       <button class="card action-card" onclick="navigate('education')">
         <h2>🎓 Competitive Exam Hub</h2>
-        <p>Curated prep modules for UPSC, SSC, Banking, and instant AI practice Q&A.</p>
+        <p>Functional preparation modules for UPSC, SSC, Banking, UGC NET, and AI Q&A generation.</p>
       </button>
-      <button class="card action-card" onclick="triggerSOS()">
+      <button class="card action-card" onclick="confirmSOS()">
         <h2 style="color:var(--error);">🚨 Emergency SOS (112)</h2>
-        <p>Immediate shortcut to trigger national emergency assistance.</p>
+        <p>Fast emergency shortcut with safety confirmation to prevent accidental dials.</p>
       </button>
     </section>
 
-    <!-- Screen 2: OCR -->
+    <!-- Screen 2: Advanced OCR & Scene Hub -->
     <section id="view-ocr" class="view-panel" aria-labelledby="h-ocr">
-      <h1 id="h-ocr">Advanced OCR Hub</h1>
+      <h1 id="h-ocr">Advanced OCR & Scene Hub</h1>
       <div class="card">
         <div class="form-group">
-          <label for="ocrFileInput">Select or Capture Image / Document</label>
-          <input type="file" id="ocrFileInput" accept="image/*,application/pdf" onchange="handleOCRFileUpload(event)" />
+          <label for="ocrLang">Select Recognition Language</label>
+          <select id="ocrLang">
+            <option value="eng">English (eng)</option>
+            <option value="hin">Hindi (hin)</option>
+            <option value="tam">Tamil (tam)</option>
+            <option value="tel">Telugu (tel)</option>
+            <option value="kan">Kannada (kan)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="ocrFileInput">Select or Capture Image File</label>
+          <input type="file" id="ocrFileInput" accept="image/*" onchange="previewOCRImage(event)" />
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button class="btn" onclick="executeOCRSimulation()">Process OCR (Alt+P)</button>
-          <button class="btn btn-secondary" onclick="describeSceneSimulation()">Describe Image Scene</button>
+          <button class="btn" onclick="executeRealOCR()">Extract Text (Alt+P)</button>
+          <button class="btn btn-secondary" onclick="analyzeSceneContent()">Describe Image Scene</button>
         </div>
+        <div id="ocrStatus" style="margin-top:8px; font-weight:bold; color:var(--primary);" aria-live="polite"></div>
       </div>
       <div class="card">
         <label for="ocrResultText">Extracted Editable Text</label>
-        <textarea id="ocrResultText" rows="6">Blind Tech Foundation: Empowering individuals with accessible, open-source technology.</textarea>
-        <div style="display:flex; gap:8px; margin-top:8px;">
+        <textarea id="ocrResultText" rows="6" placeholder="Extracted text will appear here..."></textarea>
+        <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
           <button class="btn" onclick="speakText(document.getElementById('ocrResultText').value)">Read Aloud</button>
           <button class="btn btn-secondary" onclick="copyToClipboard('ocrResultText')">Copy Text</button>
+          <button class="btn btn-secondary" onclick="shareExtractedText()">Share Text</button>
         </div>
       </div>
     </section>
 
-    <!-- Screen 3: Universal Reading -->
+    <!-- Screen 3: Universal Reading Hub -->
     <section id="view-reading" class="view-panel" aria-labelledby="h-reading">
       <h1 id="h-reading">Universal Reading Hub</h1>
       <div class="card">
@@ -464,101 +483,70 @@
           <input type="range" id="readerSpeed" min="0.5" max="2.5" step="0.25" value="1.0" oninput="updateSpeechRate(this.value)" />
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button class="btn" onclick="playDocumentSpeech()">Play Aloud (Alt+R)</button>
-          <button class="btn btn-secondary" onclick="stopAllSpeech()">Stop Audio</button>
+          <button class="btn" onclick="startDocumentReading()">Play Aloud (Alt+R)</button>
+          <button class="btn btn-secondary" onclick="pauseDocumentReading()">Pause</button>
+          <button class="btn btn-secondary" onclick="resumeDocumentReading()">Resume</button>
+          <button class="btn btn-secondary" onclick="rewindDocumentParagraph()">Rewind</button>
+          <button class="btn btn-secondary" onclick="skipDocumentParagraph()">Skip</button>
+          <button class="btn btn-secondary" onclick="stopAllSpeech()">Stop</button>
         </div>
       </div>
       <div class="card">
         <div class="form-group">
-          <label for="readingFileInput">Import File (TXT, PDF, MD, HTML, CSV, JSON)</label>
-          <input type="file" id="readingFileInput" accept=".txt,.pdf,.md,.html,.csv,.json" onchange="handleDocumentImport(event)" />
+          <label for="readingFileInput">Import File (TXT, MD, HTML, CSV)</label>
+          <input type="file" id="readingFileInput" accept=".txt,.md,.html,.csv,.json" onchange="handleRealDocumentImport(event)" />
         </div>
         <label for="readingDocumentText">Document Content</label>
-        <textarea id="readingDocumentText" rows="8">The Rights of Persons with Disabilities (RPwD) Act, 2016 guarantees equal opportunity, non-discrimination, and mandatory digital accessibility across all public consumer portals in India.</textarea>
+        <textarea id="readingDocumentText" rows="8">The Rights of Persons with Disabilities (RPwD) Act, 2016 gives effect to the United Nations Convention on the Rights of Persons with Disabilities.
+
+It guarantees equality, accessibility in all public infrastructure, and reservations in government employment and higher education throughout India.</textarea>
       </div>
     </section>
 
-    <!-- Screen 4: Accessible IDE -->
+    <!-- Screen 4: Accessible Code IDE -->
     <section id="view-ide" class="view-panel" aria-labelledby="h-ide">
       <h1 id="h-ide">Accessible Code IDE</h1>
       <div class="card">
         <div class="form-group">
-          <label for="ideLang">Language Environment</label>
-          <select id="ideLang">
+          <label for="ideLang">Select Language</label>
+          <select id="ideLang" onchange="handleIDELanguageChange()">
             <option value="python">Python</option>
             <option value="javascript">JavaScript</option>
             <option value="html">HTML</option>
-            <option value="cpp">C++</option>
+            <option value="cpp">C++ (Simulation Mode)</option>
           </select>
         </div>
         <label for="codeEditor">Source Code</label>
-        <textarea id="codeEditor" rows="7" style="font-family:monospace;">def greet():
-    return "Hello from Blind Tech Accessible IDE!"
+        <textarea id="codeEditor" rows="8" style="font-family:monospace;">def solve():
+    return "Hello from Blind Tech Functional IDE!"
 
-print(greet())</textarea>
-        <div style="display:flex; gap:8px; margin-top:8px;">
-          <button class="btn" onclick="runCode()">Run Code (Alt+E)</button>
-          <button class="btn btn-secondary" onclick="document.getElementById('codeEditor').value=''; speakText('Code cleared.')">Clear</button>
+print(solve())</textarea>
+        <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+          <button class="btn" onclick="executeRealCode()">Run Code (Alt+E)</button>
+          <button class="btn btn-secondary" onclick="saveCodeToFile()">Save Script</button>
+          <button class="btn btn-secondary" onclick="document.getElementById('codeOpenInput').click()">Open File</button>
+          <input type="file" id="codeOpenInput" style="display:none;" onchange="openCodeFromFile(event)" />
+          <button class="btn btn-secondary" onclick="copyToClipboard('codeEditor')">Copy Code</button>
         </div>
       </div>
       <div class="card">
-        <h2>Terminal Spoken Output</h2>
+        <h2>Terminal & Error Output</h2>
         <div id="terminalOutput" class="output-box" tabindex="0">Terminal ready. Press "Run Code" to execute.</div>
       </div>
     </section>
 
-    <!-- Screen 5: Banking -->
+    <!-- Screen 5: Banking Tools -->
     <section id="view-banking" class="view-panel" aria-labelledby="h-banking">
-      <h1 id="h-banking">Accessible Banking Form</h1>
+      <h1 id="h-banking">Banking Form Assistant</h1>
       <div class="card">
         <div class="form-group">
           <label for="bName">Beneficiary Full Name</label>
-          <input type="text" id="bName" placeholder="Enter beneficiary name" />
+          <input type="text" id="bName" placeholder="Enter Full Name" onfocus="speakText('Enter beneficiary full name.')" />
         </div>
         <div class="form-group">
           <label for="bAccount">Account Number (Digits Only)</label>
-          <input type="text" id="bAccount" inputmode="numeric" oninput="handleAccountInput(this)" placeholder="e.g. 1029384756" />
+          <input type="text" id="bAccount" inputmode="numeric" oninput="handleAccountInput(this)" placeholder="e.g. 1029384756" onfocus="speakText('Enter account number. Each digit will be confirmed as you type.')" />
         </div>
         <div class="form-group">
           <label for="bType">Transaction Type</label>
-          <select id="bType">
-            <option value="Deposit">Deposit</option>
-            <option value="Withdrawal">Withdrawal</option>
-            <option value="Transfer">Transfer</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="bAmount">Amount in ₹ (INR)</label>
-          <input type="number" id="bAmount" oninput="handleAmountInput(this.value)" placeholder="e.g. 5000" />
-          <div id="wordsOut" style="color:var(--primary); font-weight:bold; margin-top:4px;" aria-live="polite"></div>
-        </div>
-        <button class="btn" onclick="submitBankingForm()">Submit & Announce Summary (Alt+S)</button>
-      </div>
-      <div id="bankReceipt" class="card output-box" style="display:none;" tabindex="0"></div>
-    </section>
-
-    <!-- Screen 6: Finance -->
-    <section id="view-finance" class="view-panel" aria-labelledby="h-finance">
-      <h1 id="h-finance">Finance & Money Tools</h1>
-      <div class="tabs-bar" role="tablist">
-        <button class="tab-btn active" role="tab" onclick="switchFinTab('emi')">EMI Calculator</button>
-        <button class="tab-btn" role="tab" onclick="switchFinTab('sip')">SIP Planner</button>
-        <button class="tab-btn" role="tab" onclick="switchFinTab('exp')">Expense Tracker</button>
-      </div>
-
-      <div id="fin-emi" class="card">
-        <h2>EMI Calculator</h2>
-        <div class="form-group">
-          <label for="emiP">Principal Loan Amount (₹)</label>
-          <input type="number" id="emiP" value="500000" />
-        </div>
-        <div class="form-group">
-          <label for="emiR">Annual Interest Rate (%)</label>
-          <input type="number" step="0.1" id="emiR" value="8.5" />
-        </div>
-        <div class="form-group">
-          <label for="emiN">Tenure (Years)</label>
-          <input type="number" id="emiN" value="5" />
-        </div>
-        <button class="btn" onclick="calcEMI()">Calculate EMI (Alt+C)</button>
-        <div id="emiResult" class="output-box" style="d
+          <select id="bTyp
